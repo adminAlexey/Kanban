@@ -1,0 +1,261 @@
+/* Общие стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9fafb;
+    color: #333;
+    line-height: 1.6;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    position: relative;
+}
+
+.modal-content .close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-content .close:hover {
+    color: #ff4d4d;
+}
+
+/* Окно входа */
+#login-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#login-modal .modal-content {
+    text-align: center;
+}
+
+#login-modal input {
+    margin-bottom: 1rem;
+}
+
+#login-modal .submit-btn {
+    background-color: #007bff;
+    color: #fff;
+}
+
+#login-modal .submit-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header h2 {
+    font-size: 1.8rem;
+    color: #007bff;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+.add-task-btn {
+    background-color: #28a745;
+    color: #fff;
+    margin-right: 1rem;
+}
+
+.add-task-btn:hover {
+    background-color: #218838;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.username {
+    margin-right: 0.5rem;
+    font-weight: bold;
+}
+
+.account-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Боковая панель */
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding: 1rem;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.new-project-btn {
+    background-color: #007bff;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.project-list {
+    list-style: none;
+}
+
+.project-list li {
+    padding: 0.5rem 0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.project-list li:hover {
+    background-color: #f0f4f8;
+}
+
+/* Канбан-доска */
+.kanban-board {
+    display: flex;
+    margin-left: 270px; /* Отступ для боковой панели */
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.column {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    flex: 1;
+}
+
+.cards {
+    min-height: 100px;
+}
+
+/* Карточки задач */
+.card {
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Приоритетные кнопки */
+.priority-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.priority-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+}
+
+.priority-btn.active {
+    transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Форма создания задачи */
+#task-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.submit-btn {
+    background-color: #007bff;
+    color: #fff;
+    align-self: flex-end;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}

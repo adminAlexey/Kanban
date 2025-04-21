@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <!-- Окно входа -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Вход</h2>
+            <form id="login-form">
+                <label for="username">Логин:</label>
+                <input type="text" id="username" name="username" required>
+
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+
+                <button type="submit" class="submit-btn">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <h2>Kanban</h2>
+        <div class="header-content">
+            <button id="add-task-btn" class="add-task-btn">Добавить задачу</button>
+            <div class="user-info">
+                <span id="username-display" class="username"></span>
+                <img src="../static/account-icon.jpg" alt="" class="account-icon">
+            </div>
+        </div>
+    </header>
+
+    <!-- Боковая панель -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Проекты</h3>
+            <button id="new-project-btn" class="new-project-btn">+</button>
+        </div>
+        <ul id="project-list" class="project-list"></ul>
+    </div>
+
+    <!-- Канбан-доска -->
+    <div class="kanban-board">
+        <div class="column" id="todo">
+            <h2>To Do</h2>
+            <div class="cards" id="todo-cards"></div>
+        </div>
+        <div class="column" id="in-progress">
+            <h2>In Progress</h2>
+            <div class="cards" id="in-progress-cards"></div>
+        </div>
+        <div class="column" id="done">
+            <h2>Done</h2>
+            <div class="cards" id="done-cards"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Создать задачу</h2>
+            <form id="task-form">
+                <label for="title">Название:</label>
+                <input type="text" id="title" name="title" required>
+                <br>
+                <label for="description">Описание:</label>
+                <textarea id="description" name="description"></textarea>
+                <br>
+                <label for="due-date">Контрольный срок:</label>
+                <input type="date" id="due-date" name="due-date" required>
+                <br>
+                <label for="assignee">Исполнитель:</label>
+                <input type="text" id="assignee" name="assignee" required>
+                <br>
+                <label>Важность:</label>
+                <div class="priority-buttons">
+                    <button type="button" class="priority-btn" data-priority="low" style="background-color: green;"></button>
+                    <button type="button" class="priority-btn" data-priority="medium" style="background-color: yellow;"></button>
+                    <button type="button" class="priority-btn" data-priority="high" style="background-color: red;"></button>
+                </div>
+                <input type="hidden" id="priority" name="priority">
+
+                <button type="submit" class="submit-btn">Создать</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
