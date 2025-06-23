@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: kanban-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kanban
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kanban-network
+
+  web:
+    build: .
+    container_name: kanban-app
+    command: flask run --host=0.0.0.0 --port=8080
+    environment:
+      FLASK_ENV: development
+      DATABASE_URL: sqlite:///kanban.db
+    ports:
+      - "80:8080"
+    depends_on:
+      - db
+    networks:
+      - kanban-network
+
+volumes:
+  postgres_data:
+
+networks:
+  kanban-network:
+    driver: bridge

@@ -1,1 +1,6 @@
-tasks.db
+.env
+instance
+*.log
+.vscode/
+__pycache__
+.sqlite

@@ -1,261 +1,343 @@
 /* Общие стили */
-* {
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f9fafb;
+    background-color: #f5f7fa;
     color: #333;
-    line-height: 1.6;
+    overflow: hidden; /* Отключаем прокрутку всей страницы */
+    height: 100vh; /* Фиксируем высоту */
 }
 
-h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-/* Модальное окно */
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 100;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
 }
 
 .modal-content {
     background-color: #fff;
-    margin: 10% auto;
-    padding: 2rem;
+    padding: 25px;
     border-radius: 8px;
-    width: 400px;
-    max-width: 90%;
-    position: relative;
+    width: 350px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.modal-content .close {
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
-    font-size: 1.5rem;
-    cursor: pointer;
+.modal h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 22px;
+    margin-bottom: 20px;
 }
 
-.modal-content .close:hover {
-    color: #ff4d4d;
+.modal label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
 }
 
-/* Окно входа */
-#login-modal {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.modal input[type="text"],
+.modal input[type="password"],
+.modal input[type="date"],
+.modal textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
-#login-modal .modal-content {
-    text-align: center;
+.modal textarea {
+    height: 80px;
+    resize: vertical;
 }
 
-#login-modal input {
-    margin-bottom: 1rem;
-}
-
-#login-modal .submit-btn {
-    background-color: #007bff;
-    color: #fff;
-}
-
-#login-modal .submit-btn:hover {
-    background-color: #0056b3;
-}
-
-/* Header */
+/* Шапка */
 .header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    height: 60px;
+    box-sizing: border-box;
 }
 
 .header h2 {
-    font-size: 1.8rem;
-    color: #007bff;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
 }
 
 .header-content {
     display: flex;
     align-items: center;
-}
-
-.add-task-btn {
-    background-color: #28a745;
-    color: #fff;
-    margin-right: 1rem;
-}
-
-.add-task-btn:hover {
-    background-color: #218838;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-}
-
-.username {
-    margin-right: 0.5rem;
-    font-weight: bold;
-}
-
-.account-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
+    gap: 20px;
 }
 
 /* Боковая панель */
 .sidebar {
     width: 250px;
     background-color: #fff;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     position: fixed;
-    top: 0;
-    bottom: 0;
     left: 0;
-    padding: 1rem;
+    top: 60px; /* Отступ под шапку */
+    bottom: 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    padding: 20px 0;
+    overflow-y: auto; /* Прокрутка только для сайдбара */
 }
 
 .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    padding: 0 20px 15px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
 }
 
-.new-project-btn {
-    background-color: #007bff;
-    color: #fff;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+.sidebar h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #555;
+    font-weight: 600;
 }
 
 .project-list {
     list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .project-list li {
-    padding: 0.5rem 0;
+    padding: 12px 20px;
     cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
+    font-size: 14px;
+    color: #333;
+    transition: background-color 0.2s;
 }
 
 .project-list li:hover {
-    background-color: #f0f4f8;
+    background-color: #f5f7fa;
 }
 
-/* Канбан-доска */
+/* Канбан доска */
 .kanban-board {
+    margin-left: 250px;
+    margin-top: 60px; /* Отступ под шапку */
+    padding: 20px;
+    height: calc(100vh - 60px); /* Высота минус шапка */
+    background-color: #f5f7fa;
+    overflow-x: auto; /* Горизонтальная прокрутка для колонок */
+    overflow-y: hidden; /* Вертикальную прокрутку убираем */
+    box-sizing: border-box;
+}
+
+.column-list {
     display: flex;
-    margin-left: 270px; /* Отступ для боковой панели */
-    padding: 1rem;
-    gap: 1rem;
+    gap: 20px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    align-items: flex-start;
 }
 
-.column {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 1rem;
-    flex: 1;
-}
-
-.cards {
-    min-height: 100px;
-}
-
-/* Карточки задач */
-.card {
-    background-color: #f9fafb;
-    padding: 1rem;
+/* Кнопки */
+.add-task-btn, .add-project-btn, .submit-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
     border-radius: 4px;
-    margin-bottom: 0.5rem;
     cursor: pointer;
-    transition: transform 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 
-.card:hover {
-    transform: translateY(-5px);
+.add-task-btn:hover, .add-project-btn:hover, .submit-btn:hover {
+    background-color: #2980b9;
 }
 
-/* Приоритетные кнопки */
-.priority-buttons {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+.add-project-btn {
+    padding: 5px 10px;
+    font-size: 16px;
+    background-color: #f5f7fa;
+    color: #3498db;
+    border: 1px solid #3498db;
+}
+
+.add-project-btn:hover {
+    background-color: #e3f2fd;
 }
 
 .priority-btn {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: none;
+    margin-right: 5px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.priority-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.priority-buttons {
+    margin-bottom: 15px;
+}
+
+/* Информация о пользователе */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.username {
+    font-size: 14px;
+}
+
+.account-icon {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: none;
+    object-fit: cover;
+}
+
+/* Закрытие модального окна */
+.close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 24px;
     cursor: pointer;
+    color: #aaa;
 }
 
-.priority-btn.active {
-    transform: scale(1.2);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+.close:hover {
+    color: #333;
 }
 
-/* Форма создания задачи */
-#task-form {
+/* Карточки задач */
+.task-card {
+    background-color: white;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #3498db;
+    cursor: grab;
+}
+
+.task-card.high-priority {
+    border-left-color: #e74c3c;
+}
+
+.task-card.medium-priority {
+    border-left-color: #f39c12;
+}
+
+.task-card.low-priority {
+    border-left-color: #2ecc71;
+}
+
+.task-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.task-description {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.task-due-date {
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Колонки */
+.column {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    width: 280px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
 }
 
-.submit-btn {
-    background-color: #007bff;
-    color: #fff;
-    align-self: flex-end;
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
 }
 
-.submit-btn:hover {
-    background-color: #0056b3;
+.column-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #2c3e50;
+}
+
+.task-list {
+    flex-grow: 1;
+    overflow-y: auto; /* Прокрутка внутри колонки */
+    min-height: 100px;
+    padding-right: 5px; /* Чтобы не заезжал скролл на контент */
+}
+
+/* Кастомный скролл */
+.task-list::-webkit-scrollbar, .sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-list::-webkit-scrollbar-track, .sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.task-list::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.task-list::-webkit-scrollbar-thumb:hover, .sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }

@@ -8,11 +8,11 @@
 </head>
 <body>
     <!-- Окно входа -->
-    <div id="login-modal" class="modal">
+    <!-- <div id="login-modal" class="modal">
         <div class="modal-content">
             <h2>Вход</h2>
-            <form id="login-form">
-                <label for="username">Логин:</label>
+            <form id="login-form" method="POST" action="{{ url_for('login') }}">
+                <label for="username">Логин: (восемь цифр)</label>
                 <input type="text" id="username" name="username" required>
 
                 <label for="password">Пароль:</label>
@@ -21,7 +21,7 @@
                 <button type="submit" class="submit-btn">Войти</button>
             </form>
         </div>
-    </div>
+    </div> -->
 
     <!-- Header -->
     <header class="header">
@@ -30,7 +30,7 @@
             <button id="add-task-btn" class="add-task-btn">Добавить задачу</button>
             <div class="user-info">
                 <span id="username-display" class="username"></span>
-                <img src="../static/account-icon.jpg" alt="" class="account-icon">
+                <img src="../static/account-icon.png" alt="" class="account-icon">
             </div>
         </div>
     </header>
@@ -39,35 +39,39 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <h3>Проекты</h3>
-            <button id="new-project-btn" class="new-project-btn">+</button>
+            <button id="add-board-btn" class="add-project-btn">+</button>
         </div>
-        <ul id="project-list" class="project-list"></ul>
+        <ul id="project-list" class="project-list">
+            <!-- Проекты будут добавляться сюда -->
+        </ul>
     </div>
 
     <!-- Канбан-доска -->
     <div class="kanban-board">
-        <div class="column" id="todo">
-            <h2>To Do</h2>
-            <div class="cards" id="todo-cards"></div>
-        </div>
-        <div class="column" id="in-progress">
-            <h2>In Progress</h2>
-            <div class="cards" id="in-progress-cards"></div>
-        </div>
-        <div class="column" id="done">
-            <h2>Done</h2>
-            <div class="cards" id="done-cards"></div>
+        <ul id="column-list" class="column-list"></ul>
+    </div>
+
+    <!-- Модальное окно добавить доску -->
+    <div id="modal-new-board" class="modal">
+        <div class="modal-content">
+            <span id="close-board-modal" class="close">&times;</span>
+            <h2>Создать доску</h2>
+            <form id="board-form">
+                <label for="title-board">Название:</label>
+                <input type="text" id="title-board" name="title" required>
+                <button type="submit" class="submit-btn">Создать</button>
+            </form>
         </div>
     </div>
 
-    <!-- Модальное окно -->
-    <div id="modal" class="modal">
+    <!-- Модальное окно добавить карточку-->
+    <div id="modal-new-task" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <span id="close-task-modal" class="close">&times;</span>
             <h2>Создать задачу</h2>
             <form id="task-form">
-                <label for="title">Название:</label>
-                <input type="text" id="title" name="title" required>
+                <label for="title-task">Название:</label>
+                <input type="text" id="title-task" name="title" required>
                 <br>
                 <label for="description">Описание:</label>
                 <textarea id="description" name="description"></textarea>
@@ -76,13 +80,13 @@
                 <input type="date" id="due-date" name="due-date" required>
                 <br>
                 <label for="assignee">Исполнитель:</label>
-                <input type="text" id="assignee" name="assignee" required>
+                <input type="text" id="assignee" name="assignee" required> <!-- добавить список имен из БД-->
                 <br>
                 <label>Важность:</label>
                 <div class="priority-buttons">
-                    <button type="button" class="priority-btn" data-priority="low" style="background-color: green;"></button>
-                    <button type="button" class="priority-btn" data-priority="medium" style="background-color: yellow;"></button>
-                    <button type="button" class="priority-btn" data-priority="high" style="background-color: red;"></button>
+                    <button type="button" class="priority-btn" data-priority="1" style="background-color: green;"></button>
+                    <button type="button" class="priority-btn" data-priority="2" style="background-color: yellow;"></button>
+                    <button type="button" class="priority-btn" data-priority="3" style="background-color: red;"></button>
                 </div>
                 <input type="hidden" id="priority" name="priority">
 

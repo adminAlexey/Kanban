@@ -1,137 +1,196 @@
-from flask import Flask, jsonify, request, send_from_directory
-import sqlite3
-import os
+from flask import Flask, render_template, request, jsonify #, send_from_directory
+# from flask_sqlalchemy import SQLAlchemy
+from config import config_by_name
+import models
+from datetime import datetime
 
 app = Flask(__name__)
+app.config.from_object(config_by_name['dev'])
+app.secret_key = app.config.get('SECRET_KEY', 'fallback-secret-key')
 
-# Подключение к SQLite
-DATABASE = 'tasks.db'
-
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row  # Для получения результатов в виде словарей
-    return conn
-
-# Инициализация базы данных
-def init_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT,
-            status TEXT NOT NULL,
-            due_date TEXT,
-            assignee TEXT,
-            priority TEXT
-        );
-    ''')
-    conn.commit()
-    cur.close()
-    conn.close()
+models.base.db.init_app(app)
 
 @app.route('/')
 def index():
-    return send_from_directory(os.path.dirname(__file__), 'templates/index.html')
+    return render_template('index.html')
+    # return send_from_directory(os.path.dirname(__file__), 'templates/index.html')
 
-# Маршрут для получения всех задач
-@app.route('/api/tasks', methods=['GET'])
-def get_tasks():
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    # password = data.get('password') 
+
+    if not username:
+        return jsonify({'success': False, 'message': 'Логин обязателен'}), 400
+
+    # Ищем пользователя в БД
+    user = models.User.query.filter_by(login=username).first()
+
+    if not user:
+        # Создаем нового пользователя, если его нет
+        user = models.User(login=username)
+        models.base.db.session.add(user)
+
+        owner_id = models.User.query.filter_by(login=username).first().id
+        board = models.Board(name='Kanban доска',
+                                owner_id=owner_id)
+        models.base.db.session.add(board)
+
+        board_id = models.Board.query.filter_by(name='Kanban доска', owner_id=owner_id).all()[-1].id
+
+        backlog_column = models.Column(board_id=board_id, title='BackLog', position=0)
+        to_do_column = models.Column(board_id=board_id, title='To Do', position=1)
+        in_progress_column = models.Column(board_id=board_id, title='In Progress', position=2)
+        done_column = models.Column(board_id=board_id, title='Done', position=3)
+        models.base.db.session.add(backlog_column)
+        models.base.db.session.add(to_do_column)
+        models.base.db.session.add(in_progress_column)
+        models.base.db.session.add(done_column)
+
+        try:
+            models.base.db.session.commit()
+        except Exception as e:
+            models.base.db.session.rollback()
+            return jsonify({'success': False, 'message': 'Ошибка при регистрации пользователя'}), 500
+
+    return jsonify({
+        'success': True,
+        'message': 'Успешный вход',
+        'username': username
+    })
+
+@app.route('/load_boards', methods=['POST'])
+def load_boards():
+    data = request.get_json()
+    username = data.get('username')
+    user_id = models.User.query.filter_by(login=username).first().id
+    boards = models.Board.query.filter_by(owner_id=user_id).all()
+
+    boards_list = [
+        {
+            'id': board.id,
+            'name': board.name,
+            'owner_id': board.owner_id
+        }
+        for board in boards
+    ]
+    print(boards_list)
+
+    return jsonify(boards_list)
+
+@app.route('/fill_boards', methods=['POST'])
+def fill_boards():
+    data = request.get_json()
+    board_id = data.get('board_id')
+    board_info = [
+        {
+            'id': column.id,
+            'board_id': column.board_id,
+            'title': column.title,
+            'position': column.position,
+            'tasks': [
+                {
+                    'id': task.id,
+                    'column_id': task.column_id,
+                    'owner_id': task.owner_id,
+                    'assignee_id': task.assignee_id,                    
+                    'title': task.title,
+                    'description': task.description,
+                    'due_date': task.due_date.strftime('%Y-%m-%d'),
+                    'priority': task.priority
+                }
+                for task in models.Task.query.filter_by(column_id=column.id).all()
+            ]
+        }
+        for column in models.Column.query.filter_by(board_id=board_id).all()
+    ]
+    return jsonify(board_info)
+
+@app.route('/add_task', methods=['POST'])
+def add_task():
+    data = request.get_json()
+    print('data', data)
+    owner = data.get('owner')
+    assignee = data.get('assignee')
+    title = data.get('title')
+    description = data.get('description')
+    due_date = datetime.strptime(data.get('due_date'), '%Y-%m-%d').date()
+    priority = data.get('priority')
+    project = data.get('project')
+    board_id = models.Board.query.filter_by(name=project).first().id
+    column_id = models.Column.query.filter_by(board_id=board_id, title='BackLog').first().id
+    owner_id = models.User.query.filter_by(login=owner).first().id
+    assignee_id = models.User.query.filter_by(login=assignee).first().id
+
+    task = models.Task(
+        column_id=column_id,
+        owner_id=owner_id,
+        assignee_id=assignee_id,
+        title=title,
+        description=description,
+        due_date=due_date,
+        priority=priority,
+    )
+
+    models.base.db.session.add(task)
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM tasks ORDER BY status')
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        # Преобразуем данные в JSON
-        tasks = [
-            {
-                'id': row['id'],
-                'title': row['title'],
-                'description': row['description'],
-                'status': row['status'],
-                'due_date': row['due_date'],
-                'assignee': row['assignee'],
-                'priority': row['priority']
-            }
-            for row in rows
-        ]
-        return jsonify(tasks)
+        models.base.db.session.commit()
     except Exception as e:
-        print('Error fetching tasks:', str(e))
-        return jsonify({'error': str(e)}), 500
+        print('error', e)
+        models.base.db.session.rollback()
+        return jsonify({'success': False, 'message': 'Ошибка при добавлении карточки'}), 500
 
-# Маршрут для создания новой задачи
-@app.route('/api/tasks', methods=['POST'])
-def create_task():
+    return jsonify({
+        'success': True,
+        'message': 'Доска создана успешно',
+        'title': title,
+        'description': description,
+        'due_date': due_date,
+        'assignee': assignee,
+        'priority': priority
+    })
+
+@app.route('/add_board', methods=['POST'])
+def add_board():
+    data = request.get_json()
+    board_name = data.get('board_name')
+    owner = data.get('owner')
+    owner_id = models.User.query.filter_by(login=owner).first().id
+
+    board = models.Board(name=board_name,
+                         owner_id=owner_id)
+    models.base.db.session.add(board)
+
+    board_id = models.Board.query.filter_by(name=board_name, owner_id=owner_id).all()[-1].id
+
+    backlog_column = models.Column(board_id=board_id, title='BackLog', position=0)
+    to_do_column = models.Column(board_id=board_id, title='To Do', position=1)
+    in_progress_column = models.Column(board_id=board_id, title='In Progress', position=2)
+    done_column = models.Column(board_id=board_id, title='Done', position=3)
+    models.base.db.session.add(backlog_column)
+    models.base.db.session.add(to_do_column)
+    models.base.db.session.add(in_progress_column)
+    models.base.db.session.add(done_column)
+
     try:
-        data = request.get_json()
-        print('Received data:', data)
-
-        title = data.get('title')
-        description = data.get('description', '')
-        status = data.get('status')
-        due_date = data.get('due_date')
-        assignee = data.get('assignee')
-        priority = data.get('priority')
-
-        if not title or not status or not due_date or not assignee or not priority:
-            return jsonify({'error': 'Missing required fields'}), 400
-
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO tasks (title, description, status, due_date, assignee, priority)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (title, description, status, due_date, assignee, priority))
-        conn.commit()
-        task_id = cur.lastrowid
-        cur.close()
-        conn.close()
-
-        print('Task created successfully, ID:', task_id)
-        return jsonify({
-            'message': 'Task created successfully',
-            'id': task_id,
-            'title': title,
-            'description': description,
-            'status': status,
-            'due_date': due_date,
-            'assignee': assignee,
-            'priority': priority
-        })
+        models.base.db.session.commit()
     except Exception as e:
-        print('Error creating task:', str(e))
-        return jsonify({'error': str(e)}), 500
+        print('ошибка сохранения БД', e)
+        models.base.db.session.rollback()
+        return jsonify({'success': False, 'message': 'Ошибка при добавлении доски'}), 500
 
-@app.route('/api/tasks/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    try:
-        data = request.get_json()
-        title = data.get('title')
-        description = data.get('description')
-        status = data.get('status')
-
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        if title is not None:
-            cur.execute('UPDATE tasks SET title = ? WHERE id = ?', (title, task_id))
-        if description is not None:
-            cur.execute('UPDATE tasks SET description = ? WHERE id = ?', (description, task_id))
-        if status is not None:
-            cur.execute('UPDATE tasks SET status = ? WHERE id = ?', (status, task_id))
-
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({'message': 'Task updated successfully'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify({
+        'success': True,
+        'message': 'Доска создана успешно',
+        'board':{
+            'id': board.id,
+            'name': board.name,
+            'owner_id': board.owner_id
+        }
+    })
 
 if __name__ == '__main__':
-    init_db() # Инициализация базы данных при запуске
-    app.run(debug=True)
+    with app.app_context():
+        models.base.db.create_all()
+    app.run(debug=app.config.get('DEBUG', False))

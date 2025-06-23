@@ -1,197 +1,126 @@
+sessionStorage.setItem('username', '22170424')
+const savedUser = sessionStorage.getItem('username');
+console.log(savedUser);
+var actualBoardId = null;
+
 // Функция для добавления новой карточки
-async function addCard(status) {
+async function fillBoard(board_id) {
+    const columnList = document.getElementById('column-list');
+    columnList.innerHTML = '';
     try {
-        const response = await fetch('/api/tasks', {
+        const response = await fetch('/fill_boards', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: 'New Task', description: 'No description', status }),
+            body: JSON.stringify({ 
+                board_id: board_id
+            })
         });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        const task = await response.json();
-        // Проверяем, что данные корректны
-        if (!task.id || !task.title || !task.status) {
-            throw new Error('Invalid task data received from server');
+        const board_info = await response.json();
+        console.log(board_info);
+        const columns = board_info;
+        for (const column of columns) {
+            const columnDiv = document.createElement('div');
+            columnDiv.classList.add('column');
+            columnDiv.dataset.columnId = column.id;
+            columnDiv.dataset.columnTitle = column.title;
+            columnDiv.innerHTML = `<h3>${column.title}</h3>`;
+            columnList.appendChild(columnDiv);
+            
+            console.log('column.tasks:', column.tasks);
+            for (const task of column.tasks) {
+                const taskDiv = document.createElement('div');
+                taskDiv.classList.add('task-card');
+                taskDiv.dataset.taskId = task.id;
+                taskDiv.dataset.columnId = column.id;
+                taskDiv.innerHTML = '<h3>' + task.title + '</h3><p>' + task.description + '</p>';
+                columnDiv.appendChild(taskDiv);
+            }
         }
-        const card = createCard(task.id, task.title, task.description || 'No description', task.status, task.due_date, task.assignee, task.priority);
-        const column = document.getElementById(`${status}-cards`);
-        column.appendChild(card);
+
     } catch (error) {
-        console.error('Error adding card:', error);
+        console.error('Error adding task:', error);
     }
 }
 
-function createCard(id, title, description, status, dueDate, assignee, priority) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.draggable = true;
-    card.dataset.id = id;
+document.addEventListener('DOMContentLoaded', async function () {
+    const projectList = document.getElementById('project-list');
+    // Запрос к бэкенду за списком досок
+    const response = await fetch(`/load_boards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: savedUser
+        }),
 
-    // Контейнер для приоритета (кружочек)
-    const priorityIndicator = document.createElement('div');
-    priorityIndicator.className = 'priority-indicator';
-    priorityIndicator.style.backgroundColor = getPriorityColor(priority);
-
-    // Заголовок задачи
-    const titleElement = document.createElement('div');
-    titleElement.className = 'card-title';
-    titleElement.textContent = title;
-
-    // Описание задачи
-    const descriptionElement = document.createElement('div');
-    descriptionElement.className = 'card-description';
-    descriptionElement.textContent = description || 'No description';
-
-    // Дата исполнения
-    const dueDateElement = document.createElement('div');
-    dueDateElement.className = 'card-due-date';
-    dueDateElement.textContent = `Due: ${dueDate}`;
-
-    // Проверка даты исполнения
-    const today = new Date().toISOString().split('T')[0]; // Текущая дата в формате YYYY-MM-DD
-    if (dueDate < today) {
-        dueDateElement.classList.add('overdue'); // Применяем класс для выделения
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    // Ответственный
-    const assigneeElement = document.createElement('div');
-    assigneeElement.className = 'card-assignee';
-    assigneeElement.textContent = `Assignee: ${assignee}`;
+    const boards = await response.json();
+    console.log(boards);
+    for (const board of boards) {
+        const listItem = document.createElement('li');
+        listItem.classList.add('board-item');
+        listItem.textContent = board.name;
+        listItem.dataset.boardId = board.id;
+        listItem.dataset.boardOwnerId = board.owner_id;
 
-    // Сборка карточки
-    card.appendChild(priorityIndicator);
-    card.appendChild(titleElement);
-    card.appendChild(descriptionElement);
-    card.appendChild(assigneeElement);
-    card.appendChild(dueDateElement);
-
-    return card;
-}
-
-// Функция для получения цвета приоритета
-function getPriorityColor(priority) {
-    switch (priority) {
-        case 'low':
-            return 'green';
-        case 'medium':
-            return 'yellow';
-        case 'high':
-            return 'red';
-        default:
-            return 'gray';
-    }
-}
-
-// Функция для обновления задачи в базе данных
-async function updateTaskInDB(id, title, description, status) {
-    try {
-        const data = {};
-        if (title !== null) data.title = title;
-        if (description !== null) data.description = description;
-        if (status !== null) data.status = status;
-
-        console.log('Updating task with ID:', id, 'Data:', data);
-
-        const response = await fetch(`/api/tasks/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+        listItem.addEventListener('click', async function () {
+            actualBoardId = listItem.dataset.boardId;
+            console.log(actualBoardId); // выводим ID доски в консоль
+            fillBoard(actualBoardId);
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Error updating task:', error);
+        projectList.appendChild(listItem);
     }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('modal');
-    const addTaskBtn = document.getElementById('add-task-btn');
-    const closeBtn = document.querySelector('.close');
-    const taskForm = document.getElementById('task-form');
+    // инициализация компонентов
+    const usernameDisplay = document.getElementById('username-display');
+    usernameDisplay.textContent = sessionStorage.getItem('username');
+    // const loginForm = document.getElementById('login-form');
+    // const loginModal = document.getElementById('login-modal');
     const priorityButtons = document.querySelectorAll('.priority-btn');
     const priorityInput = document.getElementById('priority');
 
-    const loginModal = document.getElementById('login-modal');
-    const loginForm = document.getElementById('login-form');
-    const unDisplay = document.getElementById('username-display');
-
-    // Показываем окно входа при загрузке страницы
-    loginModal.style.display = 'flex';
-
-    // Обработка отправки формы входа
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        // Отображаем логин пользователя в header
-        unDisplay.textContent = username;
-
-        console.log('User logged in:', { username, password });
-
-        // Скрываем окно входа
-        loginModal.style.display = 'none';
-
-        // Загружаем задачи после входа
-        loadTasks();
-    });
-
-    // Открытие модального окна
+    // модальное окно добавления задачи
+    const taskForm = document.getElementById('task-form');
+    const modalNewTask = document.getElementById('modal-new-task');
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const closeTaskBtn = document.getElementById('close-task-modal');
+    // открытие модального окна задачи
     addTaskBtn.addEventListener('click', () => {
-        modal.style.display = 'block';
-    });
-
-    // Закрытие модального окна
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // Выбор приоритета
-    priorityButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            priorityButtons.forEach(btn => btn.style.border = 'none'); // Сброс границ
-            button.style.border = '2px solid black'; // Выделение выбранного
-            priorityInput.value = button.dataset.priority; // Сохранение значения
-        });
+        modalNewTask.style.display = 'flex';
+    })
+    // Закрытие модального окна задачи
+    closeTaskBtn.addEventListener('click', () => {
+        modalNewTask.style.display = 'none';
     });
 
     // Отправка формы
     taskForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const title = document.getElementById('title').value;
+        const title = document.getElementById('title-task').value;
         const description = document.getElementById('description').value;
         const dueDate = document.getElementById('due-date').value;
         const assignee = document.getElementById('assignee').value;
         const priority = priorityInput.value;
 
-        if (!title || !dueDate || !assignee || !priority) {
-            alert('Пожалуйста, заполните все поля.');
-            return;
-        }
-
         try {
-            const response = await fetch('/api/tasks', {
+            const response = await fetch('/add_task', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    owner: savedUser,
+                    assignee: '22170424',
                     title,
                     description,
-                    status: 'todo',
                     due_date: dueDate,
-                    assignee,
-                    priority
+                    priority: priority,
+                    project: '111111111'
                 }),
             });
 
@@ -200,113 +129,115 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const task = await response.json();
+            console.log(task);
 
-            const card = createCard(task.id, task.title, task.description, task.status, task.due_date, task.assignee, task.priority);
-            const column = document.getElementById('todo-cards');
-            column.appendChild(card);
+            // const card = createCard(task.id, task.title, task.description, task.status, task.due_date, task.assignee, task.priority);
+            // const column = document.getElementById('todo-cards');
+            // column.appendChild(card);
 
-            modal.style.display = 'none'; // Закрытие модального окна
+            modalNewTask.style.display = 'none'; // Закрытие модального окна
             taskForm.reset(); // Очистка формы
         } catch (error) {
             console.error('Error adding task:', error);
         }
     });
 
-    const todoCards = document.getElementById('todo-cards');
-    const inProgressCards = document.getElementById('in-progress-cards');
-    const doneCards = document.getElementById('done-cards');
 
-    // Функция для загрузки задач
-    async function loadTasks() {
+    // модальное окно добавления доски
+    const boardForm = document.getElementById('board-form');
+    const modalNewDask = document.getElementById('modal-new-board');
+    const addDaskBtn = document.getElementById('add-board-btn');
+    const closeDaskBtn = document.getElementById('close-board-modal');
+    // открытие модального окна задачи
+    addDaskBtn.addEventListener('click', () => {
+        modalNewDask.style.display = 'flex';
+    })
+    // Закрытие модального окна задачи
+    closeDaskBtn.addEventListener('click', () => {
+        modalNewDask.style.display = 'none';
+    });
+
+    // Отправка формы
+    boardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('title-board').value;
+
         try {
-            const response = await fetch('/api/tasks');
+            const response = await fetch('/add_board', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    owner: savedUser,
+                    board_name: title
+                }),
+            });
+
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            const tasks = await response.json();
 
-            // Очистка колонок
-            todoCards.innerHTML = '';
-            inProgressCards.innerHTML = '';
-            doneCards.innerHTML = '';
-
-            // Распределение задач по колонкам
-            tasks.forEach(task => {
-                addCardToColumn(task);
-            });
+            const board = await response.json();
+            modalNewDask.style.display = 'none'; // Закрытие модального окна
+            taskForm.reset(); // Очистка формы
+            console.log(board);
         } catch (error) {
-            console.error('Error loading tasks:', error);
+            console.error('Error adding board:', error);
         }
-    }
+    });
 
-    // Инициализация перетаскивания
-    const columns = document.querySelectorAll('.cards');
-    columns.forEach(column => {
-        column.addEventListener('dragover', e => {
-            e.preventDefault(); // Разрешаем перетаскивание
-            const draggingCard = document.querySelector('.dragging');
-            if (draggingCard) {
-                const afterElement = getDragAfterElement(column, e.clientY);
-                if (afterElement == null) {
-                    column.appendChild(draggingCard); // Если нет элементов после курсора, добавляем в конец
-                } else {
-                    column.insertBefore(draggingCard, afterElement); // Вставляем перед найденным элементом
-                }
-            }
+    // окно входа
+    // if (loginForm && !savedUser) {
+    //     loginModal.style.display = 'flex';
+    //     loginForm.addEventListener('submit', async function (e) {
+    //         e.preventDefault();
+
+    //         const formData = new FormData(loginForm);
+    //         const data = Object.fromEntries(formData);
+
+    //         try {
+    //             const response = await fetch('/login', {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Content-Type': 'application/json'
+    //                 },
+    //                 body: JSON.stringify(data)
+    //             });
+
+    //             const result = await response.json();
+
+    //             if (result.success) {
+    //                 // Сохраняем имя в UI
+    //                 sessionStorage.setItem('username', data.username);
+    //                 usernameDisplay.textContent = sessionStorage.getItem('username');
+
+    //                 // Скрываем модальное окно
+    //                 document.getElementById('login-modal').style.display = 'none';
+    //             } else {
+    //                 alert(result.message || 'Ошибка входа');
+    //             }
+    //         } catch (error) {
+    //             console.error('Ошибка:', error);
+    //             alert('Не удалось подключиться к серверу');
+    //         }
+    //     });
+    // }
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modalNewTask) {
+            modalNewTask.style.display = 'none';
+        }
+        if (event.target === modalNewDask) {
+            modalNewDask.style.display = 'none';
+        }
+    });
+
+    // Выбор приоритета
+    priorityButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            priorityButtons.forEach(btn => btn.style.border = 'none'); // Сброс границ
+            button.style.border = '4px solid black'; // Выделение выбранного
+            priorityInput.value = button.dataset.priority; // Сохранение значения
         });
-
-        column.addEventListener('drop', () => {
-            const draggingCard = document.querySelector('.dragging');
-            if (draggingCard) {
-                const taskId = draggingCard.dataset.id;
-                const status = column.parentElement.id; // Получаем статус из ID родительского элемента
-                updateTaskInDB(taskId, null, null, status); // Обновляем статус задачи в базе данных
-            }
-        });
-    });
-
-    // Вспомогательная функция для определения позиции при перетаскивании
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
-
-        return draggableElements.reduce(
-            (closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2; // Вычисляем смещение относительно центра карточки
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset, element: child }; // Находим ближайший элемент выше курсора
-                } else {
-                    return closest;
-                }
-            },
-            { offset: Number.NEGATIVE_INFINITY } // Начальное значение
-        ).element;
-    }
-
-    // Обработчики событий для карточек
-    document.addEventListener('dragstart', e => {
-        if (e.target.classList.contains('card')) {
-            e.target.classList.add('dragging'); // Добавляем класс для перетаскиваемой карточки
-        }
-    });
-
-    document.addEventListener('dragend', e => {
-        if (e.target.classList.contains('card')) {
-            e.target.classList.remove('dragging'); // Удаляем класс после завершения перетаскивания
-        }
-    });
-
-    // Загрузка задач при старте
-    loadTasks();
+    });    
 });
-
-// Функция для добавления карточки в колонку
-function addCardToColumn(task) {
-    const column = document.getElementById(`${task.status}-cards`);
-    if (column) {
-        const card = createCard(task.id, task.title, task.description || 'No description', task.status, task.due_date, task.assignee, task.priority);
-        column.appendChild(card);
-    } else {
-        console.error(`Column for status "${task.status}" not found.`);
-    }
-}
