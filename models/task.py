@@ -16,3 +16,16 @@ class Task(db.Model):
     column = db.relationship('Column', backref='tasks')
     owner = db.relationship('User', foreign_keys=[owner_id])
     assignee = db.relationship('User', foreign_keys=[assignee_id])
+
+    def to_dict(self):
+        """Преобразование данных в словарь"""
+        return {
+            'id': self.id,
+            'column_id': self.column_id,
+            'owner_id': self.owner_id,
+            'assignee_id': self.assignee_id,
+            'title': self.title,
+            'description': self.description,
+            'due_date': self.due_date,
+            'priority': self.priority
+        }

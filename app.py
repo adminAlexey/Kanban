@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, jsonify #, send_from_directory
-# from flask_sqlalchemy import SQLAlchemy
+"""Module providing a function printing python version."""
+
+from datetime import datetime
+from flask import Flask, request, jsonify, send_from_directory
+from sqlalchemy.exc import SQLAlchemyError
+
 from config import config_by_name
 import models
-from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(config_by_name['dev'])
@@ -12,11 +15,12 @@ models.base.db.init_app(app)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-    # return send_from_directory(os.path.dirname(__file__), 'templates/index.html')
+    """Функция запуска интерфейса"""
+    return send_from_directory('templates', 'index.html')
 
 @app.route('/login', methods=['POST'])
 def login():
+    """Функция авторизации пользователя"""
     data = request.get_json()
     username = data.get('username')
     # password = data.get('password') 
@@ -36,8 +40,8 @@ def login():
         board = models.Board(name='Kanban доска',
                                 owner_id=owner_id)
         models.base.db.session.add(board)
-
-        board_id = models.Board.query.filter_by(name='Kanban доска', owner_id=owner_id).all()[-1].id
+        models.base.db.session.flush()
+        board_id = board.id
 
         backlog_column = models.Column(board_id=board_id, title='BackLog', position=0)
         to_do_column = models.Column(board_id=board_id, title='To Do', position=1)
@@ -50,7 +54,7 @@ def login():
 
         try:
             models.base.db.session.commit()
-        except Exception as e:
+        except SQLAlchemyError:
             models.base.db.session.rollback()
             return jsonify({'success': False, 'message': 'Ошибка при регистрации пользователя'}), 500
 
@@ -62,6 +66,7 @@ def login():
 
 @app.route('/load_boards', methods=['POST'])
 def load_boards():
+    """"Функция загрузки досок пользователя"""
     data = request.get_json()
     username = data.get('username')
     user_id = models.User.query.filter_by(login=username).first().id
@@ -75,12 +80,12 @@ def load_boards():
         }
         for board in boards
     ]
-    print(boards_list)
 
     return jsonify(boards_list)
 
 @app.route('/fill_boards', methods=['POST'])
 def fill_boards():
+    """Функция заполнения доски"""
     data = request.get_json()
     board_id = data.get('board_id')
     board_info = [
@@ -109,15 +114,16 @@ def fill_boards():
 
 @app.route('/add_task', methods=['POST'])
 def add_task():
+    """Функция добавления карточки"""
     data = request.get_json()
-    print('data', data)
     owner = data.get('owner')
     assignee = data.get('assignee')
     title = data.get('title')
     description = data.get('description')
     due_date = datetime.strptime(data.get('due_date'), '%Y-%m-%d').date()
     priority = data.get('priority')
-    project = data.get('project')
+    project_id = int(data.get('project_id'))
+    project = models.Board.query.filter_by(id=project_id).first().name
     board_id = models.Board.query.filter_by(name=project).first().id
     column_id = models.Column.query.filter_by(board_id=board_id, title='BackLog').first().id
     owner_id = models.User.query.filter_by(login=owner).first().id
@@ -136,8 +142,7 @@ def add_task():
     models.base.db.session.add(task)
     try:
         models.base.db.session.commit()
-    except Exception as e:
-        print('error', e)
+    except SQLAlchemyError:
         models.base.db.session.rollback()
         return jsonify({'success': False, 'message': 'Ошибка при добавлении карточки'}), 500
 
@@ -153,6 +158,7 @@ def add_task():
 
 @app.route('/add_board', methods=['POST'])
 def add_board():
+    """Функция добавления доски"""
     data = request.get_json()
     board_name = data.get('board_name')
     owner = data.get('owner')
@@ -175,8 +181,7 @@ def add_board():
 
     try:
         models.base.db.session.commit()
-    except Exception as e:
-        print('ошибка сохранения БД', e)
+    except SQLAlchemyError:
         models.base.db.session.rollback()
         return jsonify({'success': False, 'message': 'Ошибка при добавлении доски'}), 500
 
@@ -189,6 +194,31 @@ def add_board():
             'owner_id': board.owner_id
         }
     })
+
+@app.route('/api/tasks/<int:task_id>', methods=['PUT'])
+def update_task(task_id):
+    """Функция обновления карточки"""
+    data = request.get_json()
+    print('datata', data)
+    # Получаем задачу из БД
+    task_id = data['id']
+    task = models.Task.query.filter_by(id=task_id).first()
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
+
+    # Обновляем поля, если они переданы
+    task.title = data['title'] if data['title'] is not None else task.title
+    task.description = data['description'] if data['description'] is not None else task.description
+    task.due_date = data['due_date'] if data['due_date'] is not None else task.due_date
+    task.assignee_id = data['assignee_id'] if data['assignee_id'] is not None else task.assignee_id
+    task.priority = data['priority'] if data['priority'] is not None else task.priority
+    task.column_id = data['column_id'] if data['column_id'] is not None else task.column_id
+
+    # Сохраняем изменения
+    models.base.db.session.commit()
+
+    return jsonify({'success': True, 'task': task.to_dict()})
+
 
 if __name__ == '__main__':
     with app.app_context():
