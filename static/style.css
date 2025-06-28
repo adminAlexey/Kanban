@@ -3,7 +3,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5f7fa;
+    background-color: #fff;
     color: #333;
     overflow: hidden; /* Отключаем прокрутку всей страницы */
     height: 100vh; /* Фиксируем высоту */
@@ -64,6 +64,7 @@ body {
 
 /* Шапка */
 .header {
+    width: 85vw;
     background-color: #2c3e50;
     color: white;
     padding: 15px 25px;
@@ -73,10 +74,9 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: fixed;
     top: 0;
-    left: 0;
     right: 0;
     z-index: 10;
-    height: 60px;
+    height: 6vh;
     box-sizing: border-box;
 }
 
@@ -94,11 +94,12 @@ body {
 
 /* Боковая панель */
 .sidebar {
-    width: 250px;
+    width: 15vw;
+    height: 100vh;
     background-color: #fff;
     position: fixed;
     left: 0;
-    top: 60px; /* Отступ под шапку */
+    top: 0;
     bottom: 0;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
     padding: 20px 0;
@@ -144,11 +145,13 @@ body {
 
 /* Канбан доска */
 .kanban-board {
-    margin-left: 250px;
-    margin-top: 60px; /* Отступ под шапку */
+    margin-left: 15vw;
+    margin-top: 6vh; /* Отступ под шапку */
+    top: 0;
     padding: 20px;
-    height: calc(100vh - 60px); /* Высота минус шапка */
-    background-color: #f5f7fa;
+    height: 94vh; /* Высота минус шапка */
+    width: 85vw;
+    background-color: #fff;
     overflow-x: auto; /* Горизонтальная прокрутка для колонок */
     overflow-y: hidden; /* Вертикальную прокрутку убираем */
     box-sizing: border-box;
@@ -249,11 +252,15 @@ body {
 .task-card {
     background-color: white;
     border-radius: 6px;
-    padding: 15px;
+    padding: 0 0 10px 10px;
     margin-bottom: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    border-left: 4px solid #3498db;
+    border-left: 4px solid #3498db; /* #TODO Добавить изменение цвета в зависимости от индикатора или колонки */
     cursor: grab;
+}
+
+.task-card:hover {
+    background-color: whitesmoke;
 }
 
 .task-card.high-priority {
@@ -268,9 +275,9 @@ body {
     border-left-color: #2ecc71;
 }
 
-.task-title {
+.card-title {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin: 8px 8px;
     font-size: 14px;
 }
 
@@ -292,52 +299,59 @@ body {
 .column {
     background-color: #fff;
     border-radius: 8px;
-    padding: 15px;
-    width: 330px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 0 15px 0 0;
+    width: calc(85vw / 4);
     height: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    /* scrollbar-gutter: stable; */
+}
+
+.colum:hover {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    background-color: whitesmoke;
+}
+
+.outer-column {
+    height: 100%;
+    margin-bottom: 15px;
+}
+
+/* Кастомный скролбар */
+::-webkit-scrollbar-track {
+    background-color: #fff;
+    border-radius: 10px;
+}
+
+/* Показываем при наведении */
+.column:hover::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+    /* transition: opacity 0.2s, transform 0.2s; */ /* Посмотреть как сделать плавный показ */
+}
+
+/* Скрываем скроллбар по умолчанию */  
+::-webkit-scrollbar {
+    width: 6px;    
+    background-color: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #fff;
+    border-radius: 10px;
 }
 
 .column-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin: 0 5px 5px 5px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.column-title {
-    font-weight: 600;
-    font-size: 15px;
-    color: #2c3e50;
+    border-bottom: 2px solid #eee;
 }
 
 .task-list {
     flex-grow: 1;
     overflow-y: auto; /* Прокрутка внутри колонки */
-    min-height: 100px;
-    padding-right: 5px; /* Чтобы не заезжал скролл на контент */
-}
-
-/* Кастомный скролл */
-.task-list::-webkit-scrollbar, .sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.task-list::-webkit-scrollbar-track, .sidebar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.task-list::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.task-list::-webkit-scrollbar-thumb:hover, .sidebar::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
 }

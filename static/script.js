@@ -1,7 +1,7 @@
 sessionStorage.setItem('username', '22170424')
 const savedUser = sessionStorage.getItem('username');
 console.log(savedUser);
-var actualBoardId = null;
+var actualBoardId = sessionStorage.getItem('actualBoardId');
 
 // Функция создания карточки
 async function createCard(id, title, description, dueDate, assignee, priority) {
@@ -33,7 +33,7 @@ async function createCard(id, title, description, dueDate, assignee, priority) {
 
     // Проверка даты исполнения
     const today = new Date().toISOString().split('T')[0]; // Текущая дата в формате YYYY-MM-DD
-    if (dueDate < today) {
+    if (dueDate < today - 1) {
         dueDateElement.classList.add('overdue'); // Применяем класс для выделения
     }
 
@@ -126,7 +126,7 @@ async function updateTaskInDB(id, columnID, title, description, dueDate, assigne
 }
 
 // Функция для добавления новой карточки
-async function fillBoard(board_id) {
+async function updateBoardTask(board_id) {
     const columnList = document.getElementById('column-list');
     columnList.innerHTML = '';
 
@@ -141,20 +141,25 @@ async function fillBoard(board_id) {
         const board_info = await response.json();
 
         for (const column of board_info) {
+            const outerColumn = document.createElement('div');
+            outerColumn.classList.add('outer-column')
+
             const columnDiv = document.createElement('div');
             const newTitle = column.title.replace(/\s+/g, '-').toLowerCase();
             columnDiv.classList.add(`${newTitle}-column`, 'column', 'cards');
             columnDiv.dataset.columnId = column.id;
             columnDiv.dataset.columnTitle = column.title;
-            columnDiv.innerHTML = `<h3>${column.title}</h3>`;
+            outerColumn.innerHTML = `<h3 class="column-header">${column.title}</h3>`;
 
             // Добавляем задачи
             for (const task of column.tasks) {
                 const card = await createCard(task.id, task.title, task.description, task.due_date, task.assignee, task.priority);
                 columnDiv.appendChild(card);
             }
+            outerColumn.appendChild(columnDiv)
 
-            columnList.appendChild(columnDiv);
+            // columnList.appendChild(columnDiv);
+            columnList.appendChild(outerColumn)
         }
 
         // === ИНИЦИАЛИЗАЦИЯ DRAG AND DROP ===
@@ -165,9 +170,10 @@ async function fillBoard(board_id) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async function () {
+async function updateBoardList() {
     const projectList = document.getElementById('project-list');
-    // Запрос к бэкенду за списком досок
+    projectList.innerHTML = ''
+
     const response = await fetch(`/load_boards`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -181,6 +187,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     const boards = await response.json();
+
     for (const board of boards) {
         const listItem = document.createElement('li');
         listItem.classList.add('board-item');
@@ -190,11 +197,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         listItem.addEventListener('click', async function () {
             actualBoardId = listItem.dataset.boardId;
-            // console.log("actualBoardId", typeof actualBoardId, actualBoardId); // выводим ID доски в консоль
-            fillBoard(actualBoardId);
+            sessionStorage.setItem('actualBoardId', actualBoardId);
+            updateBoardTask(actualBoardId);
         });
         projectList.appendChild(listItem);
     }
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+    updateBoardList();
 
     // инициализация компонентов
     const usernameDisplay = document.getElementById('username-display');
@@ -224,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const title = document.getElementById('title-task').value;
         const description = document.getElementById('description').value;
-        const dueDate = document.getElementById('due-date').value;
+        const dueDate = document.getElementById('due-date').value; // TODO Поправить формат
         const assignee = document.getElementById('assignee').value;
         const priority = priorityInput.value;
 
@@ -248,10 +259,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const task = await response.json();
+            console.log('dueDate', task.due_date, 'type of', typeof task.due_date)
+            // dueDate = task.dueDate.toISOString().split('T')[0]
 
-            // const card = await createCard(task.id, task.title, task.description, task.due_date, task.assignee, task.priority);
-            // const column = document.getElementsByClassName('backlog-column')[0];
-            // column.appendChild(card);
+            const card = await createCard(task.id, task.title, task.description, dueDate, task.assignee, task.priority);
+            const column = document.getElementsByClassName('backlog-column')[0];
+            column.appendChild(card);
 
             modalNewTask.style.display = 'none'; // Закрытие модального окна
             taskForm.reset(); // Очистка формы
@@ -294,12 +307,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
-            const board = await response.json();
             modalNewDask.style.display = 'none'; // Закрытие модального окна
-            taskForm.reset(); // Очистка формы
+            boardForm.reset(); // Очистка формы
         } catch (error) {
             console.error('Error adding board:', error);
         }
+        updateBoardList();
     });
 
     // окно входа
@@ -339,6 +352,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     //     });
     // }
 
+    // Закрытие модальных окон
     window.addEventListener('click', (event) => {
         if (event.target === modalNewTask) {
             modalNewTask.style.display = 'none';
@@ -356,6 +370,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             priorityInput.value = button.dataset.priority; // Сохранение значения
         });
     });
+
+    // загрузка последней доски
+    updateBoardTask(actualBoardId);
 });
 
 // Вспомогательная функция для определения позиции при перетаскивании
