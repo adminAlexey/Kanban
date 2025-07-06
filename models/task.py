@@ -1,8 +1,9 @@
+"""Работа с задачами в БД"""
+
 from .base import db
-from .user import User
-from .column import Column
 
 class Task(db.Model):
+    """Модель задачи"""
     id = db.Column(db.Integer, primary_key=True)
     column_id = db.Column(db.Integer, db.ForeignKey('column.id'), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

@@ -80,8 +80,12 @@
                 <label for="due-date">Контрольный срок:</label>
                 <input type="date" id="due-date" name="due-date" required>
                 <br>
-                <label for="assignee">Исполнитель:</label>
-                <input type="text" id="assignee" name="assignee" required> <!-- добавить список имен из БД-->
+                <div class="custom-select">
+                    <button type="button" class="select-button">Исполнитель</button>
+                    <div class="select-options">
+                        <!-- Список исполнителей будет добавляться сюда -->
+                    </div>
+                </div>
                 <br>
                 <label>Важность:</label>
                 <div class="priority-buttons">

@@ -4,22 +4,39 @@ console.log(savedUser);
 var actualBoardId = sessionStorage.getItem('actualBoardId');
 
 // Функция создания карточки
-async function createCard(id, title, description, dueDate, assignee, priority) {
+async function createCard(id, title, description, dueDate, assignee, priority, columnTitle) {
+    priority = parseInt(priority);
     const card = document.createElement('div');
     card.classList.add('card');
-    card.classList.add('task-card');
     card.draggable = true;
     card.dataset.id = id;
+    
+    let borderColor;
+
+    if (priority === 1) {
+        borderColor = '#00ff00'; // низкий
+    } else if (priority === 2) {
+        borderColor = '#fff700'; // средний
+    } else {
+        borderColor = '#ff0000'; // высокий
+    }
+
+    // Контейнер для заголовка и названия
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'card-header';
 
     // Контейнер для приоритета (кружочек)
     const priorityIndicator = document.createElement('div');
     priorityIndicator.className = 'priority-indicator';
-    priorityIndicator.style.backgroundColor = getPriorityColor(priority);
+    priorityIndicator.style.backgroundColor = borderColor;
 
     // Заголовок задачи
     const titleElement = document.createElement('h3');
     titleElement.className = 'card-title';
     titleElement.textContent = title;
+
+    cardHeader.appendChild(priorityIndicator);
+    cardHeader.appendChild(titleElement);
 
     // Описание задачи
     const descriptionElement = document.createElement('div');
@@ -29,32 +46,39 @@ async function createCard(id, title, description, dueDate, assignee, priority) {
     // Дата исполнения
     const dueDateElement = document.createElement('div');
     dueDateElement.className = 'card-due-date';
-    dueDateElement.textContent = `Due: ${dueDate}`;
+    dueDateElement.textContent = `До: ${dueDate}`;
 
     // Проверка даты исполнения
-    const today = new Date().toISOString().split('T')[0]; // Текущая дата в формате YYYY-MM-DD
-    if (dueDate < today - 1) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // обнуляем время для честного сравнения
+
+    // Представим, что dueDate — строка в формате 'YYYY-MM-DD'
+    const taskDueDate = new Date(dueDate); // преобразуем строку в объект Date
+    if (taskDueDate < today && columnTitle !== 'Done') { // Временное решение с названием столбца заменить на порядковый номер?
         dueDateElement.classList.add('overdue'); // Применяем класс для выделения
     }
 
     // Ответственный
     const assigneeElement = document.createElement('div');
     assigneeElement.className = 'card-assignee';
-    assigneeElement.textContent = `Assignee: ${assignee}`;
+    assigneeElement.textContent = `Исполнитель: ${assignee}`;
 
     // Сборка карточки
-    card.appendChild(priorityIndicator);
-    card.appendChild(titleElement);
+    card.appendChild(cardHeader);
+    // card.appendChild(priorityIndicator);
+    // card.appendChild(titleElement);
     card.appendChild(descriptionElement);
     card.appendChild(assigneeElement);
     card.appendChild(dueDateElement);
+
+    card.style.borderLeft = `2px solid ${borderColor}`;
 
     return card;
 }
 
 // Функция инициализации перетаскивания
 function initDragAndDrop() {
-    const columns = document.querySelectorAll('.column');
+    const columns = document.querySelectorAll('.cards');
 
     columns.forEach(column => {
         column.addEventListener('dragover', e => {
@@ -105,9 +129,8 @@ async function updateTaskInDB(id, columnID, title, description, dueDate, assigne
             assignee_id: assignee_id,
             priority: priority
         };
-        console.log('Updating task with ID:', id, 'Data:', data);
 
-        const response = await fetch(`/api/tasks/${id}`, {
+        const response = await fetch(`/api/task/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -116,10 +139,7 @@ async function updateTaskInDB(id, columnID, title, description, dueDate, assigne
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
-        const result = await response.json();
-        console.log('Task updated successfully:', result);
-
+        // console.log('Updating task with ID:', id, 'Data:', data);
     } catch (error) {
         console.error('Error updating task:', error);
     }
@@ -131,10 +151,9 @@ async function updateBoardTask(board_id) {
     columnList.innerHTML = '';
 
     try {
-        const response = await fetch('/fill_boards', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ board_id: board_id })
+        const response = await fetch(`/api/board/${board_id}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
         });
 
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -142,21 +161,22 @@ async function updateBoardTask(board_id) {
 
         for (const column of board_info) {
             const outerColumn = document.createElement('div');
-            outerColumn.classList.add('outer-column')
+            outerColumn.classList.add('column')
 
             const columnDiv = document.createElement('div');
             const newTitle = column.title.replace(/\s+/g, '-').toLowerCase();
-            columnDiv.classList.add(`${newTitle}-column`, 'column', 'cards');
+            columnDiv.classList.add(`${newTitle}-column`, 'cards');
             columnDiv.dataset.columnId = column.id;
             columnDiv.dataset.columnTitle = column.title;
             outerColumn.innerHTML = `<h3 class="column-header">${column.title}</h3>`;
 
             // Добавляем задачи
             for (const task of column.tasks) {
-                const card = await createCard(task.id, task.title, task.description, task.due_date, task.assignee, task.priority);
+                const card = await createCard(task.id, task.title, task.description, task.due_date, task.assignee, task.priority, column.title);
                 columnDiv.appendChild(card);
             }
             outerColumn.appendChild(columnDiv)
+            // outerColumn.appendChild(document.createElement('br'))
 
             // columnList.appendChild(columnDiv);
             columnList.appendChild(outerColumn)
@@ -174,7 +194,7 @@ async function updateBoardList() {
     const projectList = document.getElementById('project-list');
     projectList.innerHTML = ''
 
-    const response = await fetch(`/load_boards`, {
+    const response = await fetch(`/api/boards`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -229,18 +249,53 @@ document.addEventListener('DOMContentLoaded', async function () {
         modalNewTask.style.display = 'none';
     });
 
+    // Отобразить актуальный список пользователей в канбан доске
+    taskForm.addEventListener('click', async (e) => {
+        const response = await fetch(`/api/users/${actualBoardId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        users = data.users;
+        // console.log('users: ', users, typeof users);
+        selectOption = document.querySelector('.select-options');
+        selectOption.innerHTML = '';
+        for (const user of users) {
+            option = document.createElement('div');
+            option.className = 'option';
+            option.innerHTML = user.username
+            option.dataset.priority = user.id
+            
+            option.addEventListener('click', function () {
+                const value = this.getAttribute('data-value');
+                const selectedText = this.textContent;
+
+                document.querySelector('.select-button').textContent = selectedText;
+
+                // Скрываем опции после выбора
+                document.querySelector('.select-options').style.display = 'none';
+            });
+
+            selectOption.appendChild(option)
+        }
+    })
+
     // Отправка формы
     taskForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const title = document.getElementById('title-task').value;
         const description = document.getElementById('description').value;
-        const dueDate = document.getElementById('due-date').value; // TODO Поправить формат
-        const assignee = document.getElementById('assignee').value;
+        const dueDate = document.getElementById('due-date').value;
+        // const assignee = document.getElementById('assignee').value;
         const priority = priorityInput.value;
 
         try {
-            const response = await fetch('/add_task', {
+            const response = await fetch('/api/task', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -259,12 +314,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const task = await response.json();
-            console.log('dueDate', task.due_date, 'type of', typeof task.due_date)
-            // dueDate = task.dueDate.toISOString().split('T')[0]
+            // console.log('dueDate', task.due_date, 'type of', typeof task.due_date)
 
-            const card = await createCard(task.id, task.title, task.description, dueDate, task.assignee, task.priority);
             const column = document.getElementsByClassName('backlog-column')[0];
+            const card = await createCard(task.id, task.title, task.description, dueDate, task.assignee, task.priority, column.title);
             column.appendChild(card);
+            console.log('check_color:', task.priority)
 
             modalNewTask.style.display = 'none'; // Закрытие модального окна
             taskForm.reset(); // Очистка формы
@@ -294,7 +349,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const title = document.getElementById('title-board').value;
 
         try {
-            const response = await fetch('/add_board', {
+            const response = await fetch('/api/board', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -370,6 +425,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             priorityInput.value = button.dataset.priority; // Сохранение значения
         });
     });
+    
+    document.querySelector('.select-button').addEventListener('click', function () {
+        const options = document.querySelector('.select-options');
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
 
     // загрузка последней доски
     updateBoardTask(actualBoardId);
@@ -396,11 +456,11 @@ function getDragAfterElement(container, y) {
 // Функция для получения цвета приоритета
 function getPriorityColor(priority) {
     switch (priority) {
-        case 'low':
+        case 1:
             return 'green';
-        case 'medium':
+        case 2:
             return 'yellow';
-        case 'high':
+        case 3:
             return 'red';
         default:
             return 'gray';

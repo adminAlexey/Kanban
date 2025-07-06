@@ -1,10 +1,10 @@
 """Module providing a function printing python version."""
 
 from datetime import datetime
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from sqlalchemy.exc import SQLAlchemyError
 
-from config import config_by_name
+from deploy.config import config_by_name
 import models
 
 app = Flask(__name__)
@@ -16,14 +16,14 @@ models.base.db.init_app(app)
 @app.route('/')
 def index():
     """Функция запуска интерфейса"""
-    return send_from_directory('templates', 'index.html')
+    return render_template('index.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     """Функция авторизации пользователя"""
     data = request.get_json()
     username = data.get('username')
-    # password = data.get('password') 
+    # password = data.get('password')
 
     if not username:
         return jsonify({'success': False, 'message': 'Логин обязателен'}), 400
@@ -64,7 +64,7 @@ def login():
         'username': username
     })
 
-@app.route('/load_boards', methods=['POST'])
+@app.route('/api/boards', methods=['POST'])
 def load_boards():
     """"Функция загрузки досок пользователя"""
     data = request.get_json()
@@ -83,11 +83,11 @@ def load_boards():
 
     return jsonify(boards_list)
 
-@app.route('/fill_boards', methods=['POST'])
-def fill_boards():
+@app.route('/api/board/<int:board_id>', methods=['GET'])
+def fill_boards(board_id):
     """Функция заполнения доски"""
-    data = request.get_json()
-    board_id = data.get('board_id')
+    # data = request.get_json()
+    # board_id = data.get('board_id')
     board_info = [
         {
             'id': column.id,
@@ -112,7 +112,7 @@ def fill_boards():
     ]
     return jsonify(board_info)
 
-@app.route('/add_task', methods=['POST'])
+@app.route('/api/task', methods=['POST'])
 def add_task():
     """Функция добавления карточки"""
     data = request.get_json()
@@ -156,7 +156,7 @@ def add_task():
         'priority': priority
     })
 
-@app.route('/add_board', methods=['POST'])
+@app.route('/api/board/', methods=['POST'])
 def add_board():
     """Функция добавления доски"""
     data = request.get_json()
@@ -195,7 +195,7 @@ def add_board():
         }
     })
 
-@app.route('/api/tasks/<int:task_id>', methods=['PUT'])
+@app.route('/api/task/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
     """Функция обновления карточки"""
     data = request.get_json()
@@ -219,6 +219,19 @@ def update_task(task_id):
 
     return jsonify({'success': True, 'task': task.to_dict()})
 
+# TODO Добавить функционал для добавления и удаления 
+# пользователей принадлежащих доске => получение и 
+# передача реального списка пользователей
+@app.route('/api/users/<int:board_id>', methods=['GET'])
+def get_users(board_id):
+    """Функция получения пользователей доски"""
+    return jsonify({
+        'board_id': board_id,
+        'users': [
+            {'username': '22170424', 'id': '2'}, 
+            {'username': '22121', 'id': '1'}
+        ]
+    })
 
 if __name__ == '__main__':
     with app.app_context():
