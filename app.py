@@ -149,11 +149,23 @@ def add_task():
     return jsonify({
         'success': True,
         'message': 'Доска создана успешно',
+        'id': task.id,
         'title': title,
         'description': description,
         'due_date': due_date,
         'assignee': assignee,
         'priority': priority
+    })
+
+@app.route('/api/board/<int:board_id>', methods=['DELETE'])
+def delete_board(board_id):
+    """Функция удаления доски"""
+    board = models.Board.query.filter_by(id=board_id).first()
+    models.base.db.session.delete(board)
+    models.base.db.session.commit()
+    return jsonify({
+        'success': True,
+        'message': 'Доска удалена успешно'
     })
 
 @app.route('/api/board/', methods=['POST'])
@@ -219,8 +231,8 @@ def update_task(task_id):
 
     return jsonify({'success': True, 'task': task.to_dict()})
 
-# TODO Добавить функционал для добавления и удаления 
-# пользователей принадлежащих доске => получение и 
+# TODO: Добавить функционал для добавления и удаления
+# пользователей принадлежащих доске => получение и
 # передача реального списка пользователей
 @app.route('/api/users/<int:board_id>', methods=['GET'])
 def get_users(board_id):
@@ -228,7 +240,7 @@ def get_users(board_id):
     return jsonify({
         'board_id': board_id,
         'users': [
-            {'username': '22170424', 'id': '2'}, 
+            {'username': '22170424', 'id': '2'},
             {'username': '22121', 'id': '1'}
         ]
     })

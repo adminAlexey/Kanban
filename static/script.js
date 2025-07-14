@@ -2,6 +2,23 @@ sessionStorage.setItem('username', '22170424')
 const savedUser = sessionStorage.getItem('username');
 console.log(savedUser);
 var actualBoardId = sessionStorage.getItem('actualBoardId');
+var lastBoardId = sessionStorage.getItem('lastBoardId');
+actualBoardId = 5;
+lastBoardId = 6;
+let isDragging = false;
+
+async function showCardInfo(id, title, description, dueDate, assignee, priority, columnTitle) {     
+    const modalEditTask = document.getElementById('modal-edit-task');
+    modalEditTask.style.display = 'flex';
+    modalEditTask.querySelector('.card-title').textContent = title;
+    modalEditTask.querySelector('.card-description').textContent = description;
+    modalEditTask.querySelector('.card-due-date').textContent = `Выполнить до: ${dueDate}`;
+    const optionsDiv = modalEditTask.querySelector('.select-options');
+    const assigneeDiv = document.createElement('div');
+    assigneeDiv.className = 'option';
+    assigneeDiv.textContent = 'assignee'; // TODO: Заменить на имя пользователя, проверить, почему undefined
+    optionsDiv.appendChild(assigneeDiv);
+}
 
 // Функция создания карточки
 async function createCard(id, title, description, dueDate, assignee, priority, columnTitle) {
@@ -65,13 +82,17 @@ async function createCard(id, title, description, dueDate, assignee, priority, c
 
     // Сборка карточки
     card.appendChild(cardHeader);
-    // card.appendChild(priorityIndicator);
-    // card.appendChild(titleElement);
     card.appendChild(descriptionElement);
     card.appendChild(assigneeElement);
     card.appendChild(dueDateElement);
 
     card.style.borderLeft = `2px solid ${borderColor}`;
+
+    card.addEventListener('click', (e) => {
+        if (!isDragging) {
+            showCardInfo(id, title, description, dueDate, assignee, priority, columnTitle);
+        }
+    });
 
     return card;
 }
@@ -106,12 +127,14 @@ function initDragAndDrop() {
 
     document.addEventListener('dragstart', e => {
         if (e.target.classList.contains('card')) {
+            isDragging = true;
             e.target.classList.add('dragging');
         }
     });
 
     document.addEventListener('dragend', e => {
         if (e.target.classList.contains('card')) {
+            isDragging = false;
             e.target.classList.remove('dragging');
         }
     });
@@ -139,7 +162,6 @@ async function updateTaskInDB(id, columnID, title, description, dueDate, assigne
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        // console.log('Updating task with ID:', id, 'Data:', data);
     } catch (error) {
         console.error('Error updating task:', error);
     }
@@ -168,7 +190,37 @@ async function updateBoardTask(board_id) {
             columnDiv.classList.add(`${newTitle}-column`, 'cards');
             columnDiv.dataset.columnId = column.id;
             columnDiv.dataset.columnTitle = column.title;
-            outerColumn.innerHTML = `<h3 class="column-header">${column.title}</h3>`;
+
+            const headerDiv = document.createElement('div')
+            headerDiv.classList.add('column-header');
+            const headerColumn = document.createElement('h3');
+            headerColumn.innerHTML = column.title;
+            headerColumn.contentEditable = true;
+
+            const sortButton = document.createElement('button');
+            sortButton.textContent = '⇅';
+            sortButton.className = 'sort-btn'
+            sortButton.addEventListener('click', () => {
+                // const cards = Array.from(columnDiv.querySelectorAll('.card')); // предположим, что класс карточки — .card
+
+                // cards.sort((a, b) => {
+                //     const titleA = a.querySelector('h3')?.innerText.trim().toUpperCase() || '';
+                //     const titleB = b.querySelector('h3')?.innerText.trim().toUpperCase() || '';
+                //     return titleA.localeCompare(titleB);
+                // });
+
+                // // Очистить и заново добавить отсортированные карточки
+                // columnDiv.innerHTML = ''; // очищаем текущие карточки
+                // columnDiv.appendChild(headerDiv); // добавляем заголовок обратно (если он тоже был удалён)
+                // cards.forEach(card => columnDiv.appendChild(card));
+            });
+
+            // Строим заголовок колонки
+            headerDiv.appendChild(headerColumn);
+            headerDiv.appendChild(sortButton);
+
+            
+            outerColumn.appendChild(headerDiv);
 
             // Добавляем задачи
             for (const task of column.tasks) {
@@ -176,20 +228,41 @@ async function updateBoardTask(board_id) {
                 columnDiv.appendChild(card);
             }
             outerColumn.appendChild(columnDiv)
-            // outerColumn.appendChild(document.createElement('br'))
-
-            // columnList.appendChild(columnDiv);
             columnList.appendChild(outerColumn)
         }
 
-        // === ИНИЦИАЛИЗАЦИЯ DRAG AND DROP ===
         initDragAndDrop();
+        
+        const columnAddColumn = document.createElement('div');
+        columnAddColumn.classList.add('column')
+
+        const columnDiv = document.createElement('div');
+        columnDiv.classList.add('column-add-column'); //, 'cards'
+        columnDiv.style.width = '5vw';
+        columnDiv.dataset.columnId = 0;
+        columnDiv.dataset.columnTitle = 'column-add-column';
+
+        const headerColumn = document.createElement('div');
+        headerColumn.classList.add('column-header');
+        const headerAddColumn = document.createElement('h3');
+        headerAddColumn.innerHTML = '+';
+        headerColumn.appendChild(headerAddColumn);
+        // const sortButton = document.createElement('button');
+        // sortButton.textContent = '⇅';
+        // sortButton.className = 'sort-btn';
+        // headerAddColumn.appendChild(sortButton);
+        
+        columnAddColumn.appendChild(headerColumn);
+        columnAddColumn.appendChild(columnDiv)
+
+        columnList.appendChild(columnAddColumn)
 
     } catch (error) {
-        console.error('Error adding task:', error);
+        console.error('Error adding column:', error);
     }
 }
 
+// Функция обновления списка досок
 async function updateBoardList() {
     const projectList = document.getElementById('project-list');
     projectList.innerHTML = ''
@@ -215,8 +288,37 @@ async function updateBoardList() {
         listItem.dataset.boardId = board.id;
         listItem.dataset.boardOwnerId = board.owner_id;
 
+        buttonDeleteBoard = document.createElement('button');
+        buttonDeleteBoard.classList.add('delete-board-btn');
+        buttonDeleteBoard.innerHTML = 'X'
+
+        buttonDeleteBoard.addEventListener('click', async function (e) {
+            e.stopPropagation(); // ❗ Останавливаем всплытие события
+            try {
+                const response = await fetch(`/api/board/${parseInt(board.id)}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                } else {
+                    updateBoardList();
+                    if (actualBoardId !== lastBoardId) {
+                        updateBoardTask(lastBoardId);
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting board:', error);
+            }
+        })
+        
+        listItem.appendChild(buttonDeleteBoard);
+
         listItem.addEventListener('click', async function () {
-            actualBoardId = listItem.dataset.boardId;
+            lastBoardId = parseInt(actualBoardId);
+            actualBoardId = parseInt(listItem.dataset.boardId);
+            sessionStorage.setItem('lastBoardId', lastBoardId);
             sessionStorage.setItem('actualBoardId', actualBoardId);
             updateBoardTask(actualBoardId);
         });
@@ -224,12 +326,60 @@ async function updateBoardList() {
     }
 }
 
+// Загрузка элемента DOM
 document.addEventListener('DOMContentLoaded', async function () {
+    const modalEditTask = document.getElementById('modal-edit-task');
+    // modalEditTask.style.display = 'flex';
+
+    projectButton = document.getElementById('expand-collapse');
+
+    var open = true;
+    projectButton.addEventListener('click', () => {
+        if (open){
+            open = false;
+            sidebar.classList.add('collapsed');
+            board.classList.add('expand');
+        }
+        else {
+            open = true;
+            sidebar.classList.remove('collapsed');
+            board.classList.remove('expand');
+        }
+    })
+
+    const listOptions = document.querySelectorAll('.option')
+    for (const option of listOptions) {
+        option.addEventListener('click', function () {
+            if (option.innerHTML === 'Задачу') {
+                modalNewTask.style.display = 'flex';
+            }
+            // TODO: Добавить создание колонки
+            // else if (option.innerHTML === 'Колонку') {
+            //     modalNewColumn.style.display = 'flex';
+            // }
+            else if (option.innerHTML === 'Доску') {
+                modalNewDask.style.display = 'flex';
+            }
+
+            // Скрываем опции после выбора
+            document.querySelector('.select-options').style.display = 'none';
+        });
+    }
+    
+
+    const listIcons = document.getElementsByClassName('activatable')
+    for (const icon of listIcons) {
+        icon.addEventListener('click', () => {
+            for (const otherIcon of listIcons) {
+                otherIcon.classList.remove('active');
+            }
+            icon.classList.add('active')
+        })
+    }
+
     updateBoardList();
 
     // инициализация компонентов
-    const usernameDisplay = document.getElementById('username-display');
-    usernameDisplay.textContent = sessionStorage.getItem('username');
     // const loginForm = document.getElementById('login-form');
     // const loginModal = document.getElementById('login-modal');
     const priorityButtons = document.querySelectorAll('.priority-btn');
@@ -238,12 +388,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     // модальное окно добавления задачи
     const taskForm = document.getElementById('task-form');
     const modalNewTask = document.getElementById('modal-new-task');
-    const addTaskBtn = document.getElementById('add-task-btn');
     const closeTaskBtn = document.getElementById('close-task-modal');
-    // открытие модального окна задачи
-    addTaskBtn.addEventListener('click', () => {
-        modalNewTask.style.display = 'flex';
-    })
+
     // Закрытие модального окна задачи
     closeTaskBtn.addEventListener('click', () => {
         modalNewTask.style.display = 'none';
@@ -260,9 +406,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        users = data.users;
-        // console.log('users: ', users, typeof users);
-        selectOption = document.querySelector('.select-options');
+        const users = data.users;
+        const selectOption = document.querySelector('#select-assignee');
         selectOption.innerHTML = '';
         for (const user of users) {
             option = document.createElement('div');
@@ -271,13 +416,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             option.dataset.priority = user.id
             
             option.addEventListener('click', function () {
-                const value = this.getAttribute('data-value');
+                // const value = this.getAttribute('data-value');
                 const selectedText = this.textContent;
 
-                document.querySelector('.select-button').textContent = selectedText;
-
+                selectOption.textContent = selectedText;
                 // Скрываем опции после выбора
-                document.querySelector('.select-options').style.display = 'none';
+                option.style.display = 'none';
             });
 
             selectOption.appendChild(option)
@@ -314,12 +458,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const task = await response.json();
-            // console.log('dueDate', task.due_date, 'type of', typeof task.due_date)
-
+            console.log('tast', task)
             const column = document.getElementsByClassName('backlog-column')[0];
             const card = await createCard(task.id, task.title, task.description, dueDate, task.assignee, task.priority, column.title);
             column.appendChild(card);
-            console.log('check_color:', task.priority)
 
             modalNewTask.style.display = 'none'; // Закрытие модального окна
             taskForm.reset(); // Очистка формы
@@ -414,6 +556,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         if (event.target === modalNewDask) {
             modalNewDask.style.display = 'none';
+        }
+        if (event.target === modalEditTask) {
+            modalEditTask.style.display = 'none';
         }
     });
 

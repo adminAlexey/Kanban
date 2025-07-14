@@ -28,16 +28,48 @@
     <header class="header">
         <h2>Kanban</h2>
         <div class="header-content">
-            <button id="add-task-btn" class="add-task-btn">Добавить задачу</button>
-            <div class="user-info">
+            <!-- <button id="add-task-btn" class="add-task-btn">+ Создать</button> -->
+
+            <div class="custom-select">
+                <button type="button" class="select-button" id="select-create">+ Создать</button>
+                <div class="select-options">
+                    <div class="option">Задачу</div>
+                    <div class="option">Колонку</div>
+                    <div class="option">Доску</div>
+                </div>
+            </div>
+
+            <!-- <div class="user-info">
                 <span id="username-display" class="username"></span>
                 <img src="../static/account-icon.png" alt="" class="account-icon">
-            </div>
+            </div> -->
         </div>
     </header>
 
     <!-- Боковая панель -->
-    <div class="sidebar">
+    <div class="sidebar-short">
+        <div class="sidebar-upper">
+            <div class="icon" id="expand-collapse" title="Развернуть">
+                <img src="../static/sidebar.png" alt="">
+            </div>
+            <div class="icon activatable active" id="project-icon" title="Доски">
+                <img src="../static/project.png" alt="">
+            </div>
+            <div class="icon activatable">
+                <img src="../static/bell.png" alt="">
+            </div>
+        </div>
+        <div class="sidebar-lower">
+            <div class="icon activatable settings" title="Настройки">
+                <img src="../static/settings.png" alt="">
+            </div>
+            <div class="icon account" title="Аккаунт">
+                <img src="../static/user.png" alt="" class="account-icon">
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h3>Проекты</h3>
             <button id="add-board-btn" class="add-project-btn">+</button>
@@ -48,13 +80,14 @@
     </div>
 
     <!-- Канбан-доска -->
-    <div class="kanban-board">
+    <div class="kanban-board" id="board">
         <ul id="column-list" class="column-list"></ul>
     </div>
 
     <!-- Модальное окно добавить доску -->
     <div id="modal-new-board" class="modal">
         <div class="modal-content">
+            <span id="close-task-modal" class="close">&times;</span>
             <span id="close-board-modal" class="close">&times;</span>
             <h2>Создать доску</h2>
             <form id="board-form">
@@ -81,7 +114,7 @@
                 <input type="date" id="due-date" name="due-date" required>
                 <br>
                 <div class="custom-select">
-                    <button type="button" class="select-button">Исполнитель</button>
+                    <button type="button" class="select-button" id="select-assignee">Исполнитель</button>
                     <div class="select-options">
                         <!-- Список исполнителей будет добавляться сюда -->
                     </div>
@@ -97,6 +130,37 @@
 
                 <button type="submit" class="submit-btn">Создать</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактировать карточку -->
+    <div id="modal-edit-task" class="modal">
+        <div class="modal-content" style="width: 65%; height: 70%;">
+            <span id="close-task-modal" class="close">&times;</span>
+            
+            <div class="card-header">
+                <div class="priority-indicator" style="background-color: rgb(255, 247, 0); padding: 5px;"></div>
+                <!-- Редактируемый заголовок -->
+                <h3 class="card-title" contenteditable="true" style="padding: 5px;">Test title</h3>    
+            </div>
+
+            <!-- Редактируемое описание -->
+            <div class="card-description" contenteditable="true">Test desc</div>
+            
+            <!-- Выбор исполнителя -->
+            Исполнитель: 
+            <div class="custom-select">
+                <button type="button" class="select-button" id="selected-assignee">Исполнитель</button>
+                <div class="select-options">
+                    <!-- Список исполнителей будет добавляться сюда -->
+                </div>
+            </div>
+
+            <!-- Дата -->
+            <div class="card-due-date" style="float: inline-end;">До: 2025-07-12</div>
+
+            <!-- Кнопка сохранения -->
+            <button id="save-task-btn" class="submit-btn">Сохранить</button>
         </div>
     </div>
 

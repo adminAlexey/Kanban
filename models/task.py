@@ -14,12 +14,12 @@ class Task(db.Model):
     due_date = db.Column(db.Date)
     priority = db.Column(db.Integer)  # 1 - low, 2 - medium, 3 - high
 
-    column = db.relationship('Column', backref='tasks')
-    owner = db.relationship('User', foreign_keys=[owner_id])
-    assignee = db.relationship('User', foreign_keys=[assignee_id])
+    column = db.relationship('Column', back_populates='tasks')
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='tasks')
+    assignee = db.relationship('User', foreign_keys=[assignee_id], backref='assignee_tasks')
 
     def to_dict(self):
-        """Преобразование данных в словарь"""
+        """Возвращает словарь с данными задачи"""
         return {
             'id': self.id,
             'column_id': self.column_id,

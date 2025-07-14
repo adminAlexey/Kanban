@@ -64,10 +64,10 @@ body {
 
 /* Шапка */
 .header {
-    width: 85vw;
+    width: 100vw;
     background-color: #2c3e50;
     color: white;
-    padding: 15px 25px;
+    padding: 15px 15px 15px 20vw;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -75,7 +75,6 @@ body {
     position: fixed;
     top: 0;
     right: 0;
-    z-index: 10;
     height: 6vh;
     box-sizing: border-box;
 }
@@ -93,24 +92,62 @@ body {
 }
 
 /* Боковая панель */
+.sidebar-short {
+    display: flex;
+    background-color: #ced4da;
+    width: 3vw;
+    height: 100%;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    flex-direction: column;
+    position: fixed;
+    justify-content: space-between;
+}
+
+.icon {
+    display: flex;
+    height: 3vw;
+    background-color: #ced4da;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon.active {
+    z-index: 150;
+    box-shadow:
+        0 -2px 4px rgba(0, 0, 0, 0.15), /* Сверху */
+        0 2px 4px rgba(0, 0, 0, 0.15);  /* Снизу */
+    position: relative;
+}
+
 .sidebar {
     width: 15vw;
     height: 100vh;
     background-color: #fff;
     position: fixed;
-    left: 0;
+    left: 3vw;
     top: 0;
     bottom: 0;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-    padding: 20px 0;
-    overflow-y: auto; /* Прокрутка только для сайдбара */
+    padding: 10px 0;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+}
+/* 
+.sidebar:not(:hover) {
+    transform: translateX(-100%);
+} */
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
 }
 
 .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px 15px;
+    padding: 0 10px 15px;
     border-bottom: 1px solid #eee;
     position: sticky;
     top: 0;
@@ -145,17 +182,20 @@ body {
 
 /* Канбан доска */
 .kanban-board {
-    margin-left: 15vw;
-    margin-top: 6vh; /* Отступ под шапку */
-    margin-right: 30px;
+    margin: 6vh 0 30px 18vw;
     top: 0;
     padding: 20px;
-    height: 94vh; /* Высота минус шапка */
-    width: 85vw;
+    height: 94vh;
+    width: auto;
     background-color: #fff;
-    overflow-x: auto; /* Горизонтальная прокрутка для колонок */
-    overflow-y: hidden; /* Вертикальную прокрутку убираем */
+    overflow-x: auto;
+    overflow-y: hidden;
     box-sizing: border-box;
+    transition: margin 0.3s ease;
+}
+
+.kanban-board.expand {
+    margin: 6vh 0 30px 3vw;
 }
 
 .column-list {
@@ -165,11 +205,10 @@ body {
     padding: 0;
     margin: 0;
     height: 100%;
-    align-items: flex-start;
 }
 
 /* Кнопки */
-.add-task-btn, .add-project-btn, .submit-btn, .dropdown-btn {
+.add-task-btn, .add-project-btn, .submit-btn, .dropdown-btn, .delete-board-btn, .sort-btn{
     background-color: #3498db;
     color: white;
     border: none;
@@ -181,7 +220,7 @@ body {
     transition: background-color 0.2s;
 }
 
-.add-task-btn:hover, .add-project-btn:hover, .submit-btn:hover, .dropdown-btn {
+.add-task-btn:hover, .add-project-btn:hover, .submit-btn:hover, .dropdown-btn, .sort-btn {
     background-color: #2980b9;
 }
 
@@ -195,6 +234,58 @@ body {
 
 .add-project-btn:hover {
     background-color: #e3f2fd;
+}
+
+.delete-board-btn {
+    padding: 0;
+    height: 100%;
+    width: 20px;
+    font-size: 16px;
+    background-color: #faf5f5;
+    color: #db3434;
+    border: 1px solid #db3434;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+
+.delete-board-btn:hover {
+    background-color: #fde3e3;
+}
+
+.sort-btn {
+    display: flex;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    padding: 4px;
+    font-size: 18px;
+    background-color: #f5f7fa;
+    color: #3498db;
+    border: 1px solid #3498db;
+    align-items: center;
+    justify-content: center;
+}
+
+.sort-btn:hover {
+    background-color: #e3f2fd;
+}
+
+li.board-item {
+    display: flex;
+    padding: 10px;
+    gap: 5px;
+    align-items: center;
+}
+
+.board-item {
+    /* flex-grow: 1; */
+    word-wrap: break-word;
+}
+
+.board-item button.delete-board-btn {
+    flex-shrink: 0;
 }
 
 .priority-btn {
@@ -228,10 +319,9 @@ body {
     font-size: 14px;
 }
 
-.account-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
+.icon img {
+    width: 2vw;
+    height: 2vw;
     object-fit: cover;
 }
 
@@ -256,7 +346,7 @@ body {
     margin-bottom: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     cursor: pointer;
-    position: relative;
+    /* position: relative; */
 }
 
 /* Обёртка для индикатора и заголовка */
@@ -349,7 +439,7 @@ body {
 
 /* Стили для "ползунка" */
 ::-webkit-scrollbar-thumb {
-    background-color: #fff; /* будет меняться на #888 при hover */
+    background-color: #fff;
     border-radius: 10px;
     opacity: 0;
     transition: opacity 0.2s ease, background-color 0.2s ease;
@@ -363,10 +453,21 @@ body {
 
 .column-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin: 0 5px 5px 5px;
-    padding-bottom: 10px;
+    margin: 0;
+    /* padding-bottom: 10px; */
     border-bottom: 2px solid #eee;
+}
+
+.column-header h3 {
+    padding: 10px;
+    margin: 0;
+    line-height: normal;
+}
+
+.column-header h3:hover {
+    background-color: #f8f9fa;
 }
 
 /* кастомный select */
@@ -376,7 +477,6 @@ body {
 }
 
 .select-button {
-    display: block;
     width: 100%;
     padding: 0.375rem 0.75rem;
     font-size: 1rem;
@@ -403,7 +503,6 @@ body {
     top: 100%;
     left: 0;
     right: 0;
-    z-index: 50;
     max-height: 200px;
     overflow-y: auto;
     background-color: white;
@@ -415,6 +514,7 @@ body {
 }
 
 .option {
+    color: black;
     padding: 0.5rem 0.75rem;
     cursor: pointer;
 }

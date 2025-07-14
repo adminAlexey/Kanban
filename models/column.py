@@ -8,4 +8,5 @@ class Column(db.Model):
     board_id = db.Column(db.Integer, db.ForeignKey('board.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     position = db.Column(db.Integer, nullable=False)
-    board = db.relationship('Board', backref='columns')
+
+    tasks = db.relationship('Task', back_populates='column', lazy=True, cascade='all, delete-orphan')
