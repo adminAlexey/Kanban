@@ -81,14 +81,14 @@
 
     <!-- Канбан-доска -->
     <div class="kanban-board" id="board">
-        <ul id="column-list" class="column-list"></ul>
+        <ul id="column-list" class="column-list">
+            <!-- Колонки будут добавляться сюда -->
+        </ul>
     </div>
 
     <!-- Модальное окно добавить доску -->
     <div id="modal-new-board" class="modal">
         <div class="modal-content">
-            <span id="close-task-modal" class="close">&times;</span>
-            <span id="close-board-modal" class="close">&times;</span>
             <h2>Создать доску</h2>
             <form id="board-form">
                 <label for="title-board">Название:</label>
@@ -101,7 +101,6 @@
     <!-- Модальное окно добавить карточку-->
     <div id="modal-new-task" class="modal">
         <div class="modal-content">
-            <span id="close-task-modal" class="close">&times;</span>
             <h2>Создать задачу</h2>
             <form id="task-form">
                 <label for="title-task">Название:</label>
@@ -127,7 +126,6 @@
                     <button type="button" class="priority-btn" data-priority="3" style="background-color: red;"></button>
                 </div>
                 <input type="hidden" id="priority" name="priority">
-
                 <button type="submit" class="submit-btn">Создать</button>
             </form>
         </div>
@@ -135,9 +133,7 @@
 
     <!-- Модальное окно редактировать карточку -->
     <div id="modal-edit-task" class="modal">
-        <div class="modal-content" style="width: 65%; height: 70%;">
-            <span id="close-task-modal" class="close">&times;</span>
-            
+        <div class="modal-content" style="width: 65%; height: 70%; position: relative;">            
             <div class="card-header">
                 <div class="priority-indicator" style="background-color: rgb(255, 247, 0); padding: 5px;"></div>
                 <!-- Редактируемый заголовок -->
@@ -145,22 +141,19 @@
             </div>
 
             <!-- Редактируемое описание -->
-            <div class="card-description" contenteditable="true">Test desc</div>
+            <div class="card-description" contenteditable="true" style="padding: 5px;"  >Test desc</div>
             
             <!-- Выбор исполнителя -->
             Исполнитель: 
             <div class="custom-select">
-                <button type="button" class="select-button" id="selected-assignee">Исполнитель</button>
+                <button type="button" class="select-button" id="selected-assignee" style="margin: 15px;">Исполнитель</button>
                 <div class="select-options">
                     <!-- Список исполнителей будет добавляться сюда -->
                 </div>
             </div>
 
             <!-- Дата -->
-            <div class="card-due-date" style="float: inline-end;">До: 2025-07-12</div>
-
-            <!-- Кнопка сохранения -->
-            <button id="save-task-btn" class="submit-btn">Сохранить</button>
+            <div class="card-due-date" style="position: absolute; bottom: 20px; right: 20px; font-size: 15px;">До: 2025-07-12</div>
         </div>
     </div>
 

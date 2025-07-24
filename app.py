@@ -56,7 +56,7 @@ def login():
             models.base.db.session.commit()
         except SQLAlchemyError:
             models.base.db.session.rollback()
-            return jsonify({'success': False, 'message': 'Ошибка при регистрации пользователя'}), 500
+            return jsonify({'success': False, 'message': 'Ошибка регистрации пользователя'}), 500
 
     return jsonify({
         'success': True,
@@ -86,8 +86,6 @@ def load_boards():
 @app.route('/api/board/<int:board_id>', methods=['GET'])
 def fill_boards(board_id):
     """Функция заполнения доски"""
-    # data = request.get_json()
-    # board_id = data.get('board_id')
     board_info = [
         {
             'id': column.id,
@@ -99,7 +97,8 @@ def fill_boards(board_id):
                     'id': task.id,
                     'column_id': task.column_id,
                     'owner_id': task.owner_id,
-                    'assignee_id': task.assignee_id,                    
+                    # 'assignee_id': task.assignee_id,
+                    'assignee': task.assignee.login,
                     'title': task.title,
                     'description': task.description,
                     'due_date': task.due_date.strftime('%Y-%m-%d'),
@@ -211,38 +210,40 @@ def add_board():
 def update_task(task_id):
     """Функция обновления карточки"""
     data = request.get_json()
-    print('datata', data)
-    # Получаем задачу из БД
     task_id = data['id']
     task = models.Task.query.filter_by(id=task_id).first()
     if not task:
         return jsonify({'error': 'Task not found'}), 404
-
-    # Обновляем поля, если они переданы
+    
     task.title = data['title'] if data['title'] is not None else task.title
     task.description = data['description'] if data['description'] is not None else task.description
     task.due_date = data['due_date'] if data['due_date'] is not None else task.due_date
-    task.assignee_id = data['assignee_id'] if data['assignee_id'] is not None else task.assignee_id
+    task.assignee_id = models.User.query.filter_by(login=data['assignee']).first().id if data['assignee'] is not None else task.assignee_id
     task.priority = data['priority'] if data['priority'] is not None else task.priority
     task.column_id = data['column_id'] if data['column_id'] is not None else task.column_id
 
-    # Сохраняем изменения
     models.base.db.session.commit()
 
     return jsonify({'success': True, 'task': task.to_dict()})
 
 # TODO: Добавить функционал для добавления и удаления
-# пользователей принадлежащих доске => получение и
-# передача реального списка пользователей
+# пользователей принадлежащих доске
 @app.route('/api/users/<int:board_id>', methods=['GET'])
 def get_users(board_id):
     """Функция получения пользователей доски"""
+    # board = models.Board.query.filter_by(id=board_id).first()
+    users = models.User.query.all()
+    users_data = [
+        {
+            'id': user.id,
+            'username': user.login
+        }
+        for user in users
+    ]
+    
     return jsonify({
         'board_id': board_id,
-        'users': [
-            {'username': '22170424', 'id': '2'},
-            {'username': '22121', 'id': '1'}
-        ]
+        'users': users_data
     })
 
 if __name__ == '__main__':
