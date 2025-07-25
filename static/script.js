@@ -1,9 +1,8 @@
-sessionStorage.setItem('username', '22170424')
-const savedUser = sessionStorage.getItem('username');
-var actualBoardId = sessionStorage.getItem('actualBoardId');
-var lastBoardId = sessionStorage.getItem('lastBoardId');
-// actualBoardId = 5;
-// lastBoardId = 6;
+localStorage.setItem('username', '22170424') // для удобства тестирования
+const savedUser = localStorage.getItem('username');
+var actualBoardId = localStorage.getItem('actualBoardId');
+var lastBoardId = localStorage.getItem('lastBoardId');
+
 let isDragging = false;
 
 // Блок переменных для проверки изменений карточки
@@ -50,49 +49,6 @@ async function checkUpdateTask(modalEditTask) {
     }
 }
 
-// Функция инициализации перетаскивания
-function initDragAndDrop() {
-    const columns = document.querySelectorAll('.cards');
-
-    columns.forEach(column => {
-        column.addEventListener('dragover', e => {
-            e.preventDefault(); // Разрешаем перетаскивание
-            const draggingCard = document.querySelector('.dragging');
-            if (draggingCard) {
-                const afterElement = getDragAfterElement(column, e.clientY);
-                if (afterElement == null) {
-                    column.appendChild(draggingCard);
-                } else {
-                    column.insertBefore(draggingCard, afterElement);
-                }
-            }
-        });
-
-        column.addEventListener('drop', () => {
-            const draggingCard = document.querySelector('.dragging');
-            if (draggingCard) {
-                const taskId = draggingCard.dataset.id;
-                const columnId = column.dataset.columnId; // Получаем статус из dataset
-                updateTaskInDB(taskId, columnId, null, null, null, null, null); // Обновляем статус задачи в базе данных
-            }
-        });
-    });
-
-    document.addEventListener('dragstart', e => {
-        if (e.target.classList.contains('card')) {
-            isDragging = true;
-            e.target.classList.add('dragging');
-        }
-    });
-
-    document.addEventListener('dragend', e => {
-        if (e.target.classList.contains('card')) {
-            isDragging = false;
-            e.target.classList.remove('dragging');
-        }
-    });
-}
-
 // Функция для обновления задачи в базе данных
 async function updateTaskInDB(id, columnID, title, description, dueDate, assignee, priority) {
     try {
@@ -122,6 +78,73 @@ async function updateTaskInDB(id, columnID, title, description, dueDate, assigne
 
 // Загрузка элемента DOM
 document.addEventListener('DOMContentLoaded', async function () {
+    function updateSortButtonUI(button) {
+        const sortBy = button.dataset.sortBy;
+        const order = button.dataset.order;
+        let symbol = '⇅';
+
+        if (sortBy === 'title') symbol = order === 'asc' ? 'A↑' : 'A↓';
+        else if (sortBy === 'due_date') symbol = order === 'asc' ? '📅↑' : '📅↓';
+        else if (sortBy === 'priority') symbol = order === 'asc' ? '❗↑' : '❗↓';
+
+        button.textContent = symbol;
+    }
+
+    function updateColumnCounters() {
+        document.querySelectorAll('.column').forEach(col => {
+            const cardsContainer = col.querySelector('.cards');
+            const counter = col.querySelector('.header-with-counter h6');
+            if (counter && cardsContainer) {
+                const count = cardsContainer.querySelectorAll('.card').length;
+                counter.textContent = count;
+            }
+        });
+    }
+
+    // Функция инициализации перетаскивания
+    function initDragAndDrop() {
+        const columns = document.querySelectorAll('.cards');
+
+        columns.forEach(column => {
+            column.addEventListener('dragover', e => {
+                e.preventDefault(); // Разрешаем перетаскивание
+                const draggingCard = document.querySelector('.dragging');
+                if (draggingCard) {
+                    const afterElement = getDragAfterElement(column, e.clientY);
+                    if (afterElement == null) {
+                        column.appendChild(draggingCard);
+                    } else {
+                        column.insertBefore(draggingCard, afterElement);
+                    }
+                }
+            });
+
+            column.addEventListener('drop', () => {
+                const draggingCard = document.querySelector('.dragging');
+                if (draggingCard) {
+                    const taskId = draggingCard.dataset.id;
+                    const columnId = column.dataset.columnId; // Получаем статус из dataset
+                    updateTaskInDB(taskId, columnId, null, null, null, null, null); // Обновляем статус задачи в базе данных
+                    updateColumnCounters();
+                }
+            });
+        });
+
+        document.addEventListener('dragstart', e => {
+            if (e.target.classList.contains('card')) {
+                isDragging = true;
+                e.target.classList.add('dragging');
+            }
+        });
+
+        document.addEventListener('dragend', e => {
+            if (e.target.classList.contains('card')) {
+                isDragging = false;
+                e.target.classList.remove('dragging');
+            }
+        });
+    }
+
     // Функция обновления списка досок
     async function updateBoardList() {
         const projectList = document.getElementById('project-list');
@@ -178,10 +201,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             listItem.addEventListener('click', async function () {
                 if (parseInt(actualBoardId) !== parseInt(board.id)) {
                     lastBoardId = actualBoardId;
-                    sessionStorage.setItem('lastBoardId', lastBoardId);
+                    localStorage.setItem('lastBoardId', lastBoardId);
                 }
                 actualBoardId = parseInt(board.id);
-                sessionStorage.setItem('actualBoardId', actualBoardId);
+                localStorage.setItem('actualBoardId', actualBoardId);
                 updateBoardTask(actualBoardId);
             });
             projectList.appendChild(listItem);
@@ -214,6 +237,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 const headerDiv = document.createElement('div')
                 headerDiv.classList.add('column-header');
+                
+                const newHeaderTest = document.createElement('div');
+                newHeaderTest.className = 'header-with-counter'
+
                 const headerColumn = document.createElement('h3');
                 headerColumn.innerHTML = column.title;
                 headerColumn.contentEditable = true;
@@ -222,22 +249,26 @@ document.addEventListener('DOMContentLoaded', async function () {
                 sortButton.textContent = '⇅';
                 sortButton.className = 'sort-btn'
                 sortButton.addEventListener('click', () => {
-                    // const cards = Array.from(columnDiv.querySelectorAll('.card')); // предположим, что класс карточки — .card
 
-                    // cards.sort((a, b) => {
-                    //     const titleA = a.querySelector('h3')?.innerText.trim().toUpperCase() || '';
-                    //     const titleB = b.querySelector('h3')?.innerText.trim().toUpperCase() || '';
-                    //     return titleA.localeCompare(titleB);
-                    // });
+                    // отправить запрос в бд на сортировку по названию
 
-                    // // Очистить и заново добавить отсортированные карточки
-                    // columnDiv.innerHTML = ''; // очищаем текущие карточки
-                    // columnDiv.appendChild(headerDiv); // добавляем заголовок обратно (если он тоже был удалён)
-                    // cards.forEach(card => columnDiv.appendChild(card));
+
+                    // Очистить и заново добавить отсортированные карточки
+                    columnDiv.innerHTML = ''; // очищаем текущие карточки
+                    cards.forEach(card => columnDiv.appendChild(card));
                 });
 
+                // счётчик задач в колонке
+                const counter = document.createElement('h6');
+                counter.innerHTML = column.tasks.length;
+
                 // Строим заголовок колонки
-                headerDiv.appendChild(headerColumn);
+                newHeaderTest.appendChild(headerColumn);
+                newHeaderTest.appendChild(counter)
+                headerDiv.appendChild(newHeaderTest);
+
+                // headerDiv.appendChild(headerColumn);
+                // headerDiv.appendChild(counter)
                 headerDiv.appendChild(sortButton);
 
                 
@@ -389,22 +420,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     const modalEditTask = document.getElementById('modal-edit-task');
-
-    projectButton = document.getElementById('expand-collapse');
-
-    var open = true;
-    projectButton.addEventListener('click', () => {
-        if (open){
-            open = false;
-            sidebar.classList.add('collapsed');
-            board.classList.add('expand');
-        }
-        else {
-            open = true;
-            sidebar.classList.remove('collapsed');
-            board.classList.remove('expand');
-        }
-    })
 
     const listOptions = document.querySelectorAll('.option')
     for (const option of listOptions) {
@@ -585,8 +600,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     //             if (result.success) {
     //                 // Сохраняем имя в UI
-    //                 sessionStorage.setItem('username', data.username);
-    //                 usernameDisplay.textContent = sessionStorage.getItem('username');
+    //                 localStorage.setItem('username', data.username);
+    //                 usernameDisplay.textContent = localStorage.getItem('username');
 
     //                 // Скрываем модальное окно
     //                 document.getElementById('login-modal').style.display = 'none';
@@ -675,3 +690,66 @@ function getPriorityColor(priority) {
             return 'gray';
     }
 }
+
+// Управление сайдбаром expand/collapse + hover-режим
+const expandCollapseBtn = document.getElementById('expand-collapse');
+const projectIcon = document.getElementById('project-icon');
+const sidebar = document.getElementById('sidebar');
+const board = document.querySelector('.kanban-board');
+let isExpanded = true;
+
+const savedState = localStorage.getItem('sidebarExpanded');
+if (savedState === 'false') {
+    isExpanded = false;
+    sidebar.classList.add('collapsed');
+    board.classList.add('expand');
+    expandCollapseBtn.title = 'Развернуть';
+} else {
+    isExpanded = true;
+    sidebar.classList.remove('collapsed');
+    board.classList.remove('expand');
+    expandCollapseBtn.title = 'Свернуть';
+}
+
+// переключение состояния сайдбара
+expandCollapseBtn.addEventListener('click', () => {
+    sidebar.style.transform = '';
+
+    isExpanded = !isExpanded;
+    localStorage.setItem('sidebarExpanded', isExpanded);
+
+    if (isExpanded) {
+        sidebar.classList.remove('collapsed');
+        board.classList.remove('expand');
+        expandCollapseBtn.title = 'Свернуть';
+    } else {
+        sidebar.classList.add('collapsed');
+        board.classList.add('expand');
+        expandCollapseBtn.title = 'Развернуть';
+    }
+});
+
+projectIcon.addEventListener('mouseenter', () => {
+    if (!isExpanded) {
+        sidebar.style.transition = 'transform 0.3s ease';
+        sidebar.style.transform = 'translateX(0)';
+    }
+});
+
+projectIcon.addEventListener('mouseleave', () => {
+    if (!isExpanded) {
+        sidebar.style.transform = 'translateX(-100%)';
+    }
+});
+
+sidebar.addEventListener('mouseenter', () => {
+    if (!isExpanded) {
+        sidebar.style.transform = 'translateX(0)';
+    }
+});
+
+sidebar.addEventListener('mouseleave', () => {
+    if (!isExpanded) {
+        sidebar.style.transform = 'translateX(-100%)';
+    }
+});

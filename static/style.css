@@ -11,7 +11,9 @@ body {
 
 h6 {
     display: flex;
-    left: 10px;
+    margin-top: 10px;
+    top: 10px;
+    align-self: start;
 }
 
 .modal {
@@ -139,13 +141,13 @@ h6 {
     overflow-y: auto;
     transition: transform 0.3s ease;
 }
-/* 
-.sidebar:not(:hover) {
-    transform: translateX(-100%);
-} */
 
 .sidebar.collapsed {
     transform: translateX(-100%);
+}
+
+.sidebar.expanded {
+    transform: translateX(0);
 }
 
 .sidebar-header {
@@ -472,6 +474,12 @@ li.board-item {
     border-bottom: 2px solid #eee;
 }
 
+.header-with-counter {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
 .column-header h3 {
     padding: 10px;
     margin: 0;
@@ -534,4 +542,33 @@ li.board-item {
 
 .option:hover {
     background-color: #f1f1f1;
+}
+
+
+/* === Боковая панель: короткая (всегда видима) === */
+.sidebar-short {
+    display: flex;
+    background-color: #ced4da;
+    width: 3vw;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    flex-direction: column;
+    position: fixed;
+    justify-content: space-between;
+}
+
+.icon {
+    display: flex;
+    height: 3vw;
+    background-color: #ced4da;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon img {
+    width: 2vw;
+    height: 2vw;
+    object-fit: cover;
 }
