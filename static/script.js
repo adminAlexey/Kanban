@@ -3,6 +3,11 @@ const savedUser = localStorage.getItem('username');
 var actualBoardId = localStorage.getItem('actualBoardId');
 var lastBoardId = localStorage.getItem('lastBoardId');
 
+const sidebar = document.getElementById('sidebar');
+// sidebar.style.transition = 'none';
+// sidebar.style.display = 'none';
+
+
 let isDragging = false;
 
 // Блок переменных для проверки изменений карточки
@@ -93,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function updateColumnCounters() {
         document.querySelectorAll('.column').forEach(col => {
             const cardsContainer = col.querySelector('.cards');
-            const counter = col.querySelector('.header-with-counter h6');
+            const counter = col.querySelector('.header-with-counter h5');
             if (counter && cardsContainer) {
                 const count = cardsContainer.querySelectorAll('.card').length;
                 counter.textContent = count;
@@ -125,7 +130,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const taskId = draggingCard.dataset.id;
                     const columnId = column.dataset.columnId; // Получаем статус из dataset
                     updateTaskInDB(taskId, columnId, null, null, null, null, null); // Обновляем статус задачи в базе данных
-                    updateColumnCounters();
                 }
             });
         });
@@ -141,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (e.target.classList.contains('card')) {
                 isDragging = false;
                 e.target.classList.remove('dragging');
+                updateColumnCounters();
             }
         });
     }
@@ -210,108 +215,269 @@ document.addEventListener('DOMContentLoaded', async function () {
             projectList.appendChild(listItem);
         }
     }
+    function sortColumnTasks(columnElement, sortBy, order) {
+        const cards = Array.from(columnElement.querySelectorAll('.card'));
+        const isAsc = order === 'asc';
 
-    // Функция для обновления карточек
+        cards.sort((a, b) => {
+            let valA, valB;
+
+            if (sortBy === 'title') {
+                valA = a.querySelector('.card-title').textContent.toLowerCase();
+                valB = b.querySelector('.card-title').textContent.toLowerCase();
+            } else if (sortBy === 'due_date') {
+                const dateA = new Date(a.querySelector('.card-due-date').textContent.replace('До: ', ''));
+                const dateB = new Date(b.querySelector('.card-due-date').textContent.replace('До: ', ''));
+                valA = dateA;
+                valB = dateB;
+            } else if (sortBy === 'priority') {
+                valA = parseInt(a.dataset.priority) || 0;
+                valB = parseInt(b.dataset.priority) || 0;
+            } else {
+                return 0; // default — без сортировки
+            }
+
+            if (valA < valB) return isAsc ? -1 : 1;
+            if (valA > valB) return isAsc ? 1 : -1;
+            return 0;
+        });
+
+        // 🔥 Удаляем все карточки и добавляем отсортированные
+        // Это быстрее, чем менять порядок по одной
+        cards.forEach(card => columnElement.appendChild(card));
+    }
+
+    // === ФУНКЦИЯ ОБНОВЛЕНИЯ ДОСКИ ===
     async function updateBoardTask(board_id) {
-        const columnList = document.getElementById('column-list');
-        columnList.innerHTML = '';
+        try {
+            // 1. Загружаем данные
+            const board_info = await fetchBoardData(board_id);
+            if (!board_info) return;
 
+            // 2. Очищаем старую доску
+            const columnList = document.getElementById('column-list');
+            columnList.innerHTML = '';
+
+            // 3. Создаём колонки
+            for (const column of board_info) {
+                const columnElement = createColumn(column, board_id);
+                columnList.appendChild(columnElement);
+            }
+
+            // 4. Добавляем колонку "Добавить"
+            const addColumn = createAddColumn();
+            columnList.appendChild(addColumn);
+
+            // 5. Инициализация
+            initDragAndDrop();
+
+        } catch (error) {
+            console.error('Error updating board:', error);
+        }
+    }
+
+    async function fetchBoardData(board_id) {
         try {
             const response = await fetch(`/api/board/${board_id}`, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' },
             });
-
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            const board_info = await response.json();
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching board data:', error);
+            return null;
+        }
+    }
 
-            for (const column of board_info) {
-                const outerColumn = document.createElement('div');
-                outerColumn.classList.add('column')
+    function createColumn(column, board_id) {
+        const outerColumn = document.createElement('div');
+        outerColumn.classList.add('column');
 
-                const columnDiv = document.createElement('div');
-                const newTitle = column.title.replace(/\s+/g, '-').toLowerCase();
-                columnDiv.classList.add(`${newTitle}-column`, 'cards');
-                columnDiv.dataset.columnId = column.id;
-                columnDiv.dataset.columnTitle = column.title;
+        const columnDiv = document.createElement('div');
+        const cleanTitle = column.title.replace(/\s+/g, '-').toLowerCase();
+        columnDiv.classList.add(`${cleanTitle}-column`, 'cards');
+        columnDiv.dataset.columnId = column.id;
+        columnDiv.dataset.columnTitle = column.title;
 
-                const headerDiv = document.createElement('div')
-                headerDiv.classList.add('column-header');
-                
-                const newHeaderTest = document.createElement('div');
-                newHeaderTest.className = 'header-with-counter'
+        // Заголовок с сортировкой
+        const header = createColumnHeader(column, columnDiv, board_id);
+        outerColumn.appendChild(header);
+        outerColumn.appendChild(columnDiv);
 
-                const headerColumn = document.createElement('h3');
-                headerColumn.innerHTML = column.title;
-                headerColumn.contentEditable = true;
+        // Добавляем карточки
+        const sortedTasks = sortTasks(column.tasks, board_id, column.id);
+        sortedTasks.forEach(task => {
+            createCard(task.id, task.title, task.description, task.due_date, task.assignee, task.priority, column.title)
+                .then(card => columnDiv.appendChild(card));
+        });
 
-                const sortButton = document.createElement('button');
-                sortButton.textContent = '⇅';
-                sortButton.className = 'sort-btn'
-                sortButton.addEventListener('click', () => {
+        return outerColumn;
+    }
 
-                    // отправить запрос в бд на сортировку по названию
+    function createColumnHeader(column, columnDiv, board_id) {
+        const headerDiv = document.createElement('div');
+        headerDiv.classList.add('column-header');
 
+        const headerWithCounter = document.createElement('div');
+        headerWithCounter.className = 'header-with-counter';
 
-                    // Очистить и заново добавить отсортированные карточки
-                    columnDiv.innerHTML = ''; // очищаем текущие карточки
-                    cards.forEach(card => columnDiv.appendChild(card));
-                });
+        const titleElement = document.createElement('h3');
+        titleElement.textContent = column.title;
+        titleElement.contentEditable = true;
 
-                // счётчик задач в колонке
-                const counter = document.createElement('h6');
-                counter.innerHTML = column.tasks.length;
+        const counter = document.createElement('h5');
+        counter.textContent = column.tasks.length;
 
-                // Строим заголовок колонки
-                newHeaderTest.appendChild(headerColumn);
-                newHeaderTest.appendChild(counter)
-                headerDiv.appendChild(newHeaderTest);
+        headerWithCounter.appendChild(titleElement);
+        headerWithCounter.appendChild(counter);
 
-                // headerDiv.appendChild(headerColumn);
-                // headerDiv.appendChild(counter)
-                headerDiv.appendChild(sortButton);
+        // === КНОПКА СОРТИРОВКИ ===
+        const sortButton = document.createElement('button');
+        sortButton.className = 'sort-btn';
+        sortButton.dataset.columnId = column.id;
+        sortButton.dataset.boardId = board_id;
 
-                
-                outerColumn.appendChild(headerDiv);
+        // Загружаем сохранённое состояние
+        const sortKey = `${board_id}-${column.id}`;
+        const saved = JSON.parse(localStorage.getItem('columnSort') || '{}')[sortKey] || { sortBy: 'default', order: 'asc' };
+        sortButton.dataset.sortBy = saved.sortBy;
+        sortButton.dataset.order = saved.order;
 
-                // Добавляем задачи
-                for (const task of column.tasks) {
-                    const card = await createCard(task.id, task.title, task.description, task.due_date, task.assignee, task.priority, column.title);
-                    columnDiv.appendChild(card);
-                }
-                outerColumn.appendChild(columnDiv)
-                columnList.appendChild(outerColumn)
+        updateSortButtonUI(sortButton); // Визуальное отображение
+
+        // Обработчик клика
+        sortButton.addEventListener('click', () => {
+            const btn = sortButton;
+            const current = { sortBy: btn.dataset.sortBy, order: btn.dataset.order };
+            const next = getNextSortState(current);
+
+            btn.dataset.sortBy = next.sortBy;
+            btn.dataset.order = next.order;
+            updateSortButtonUI(btn);
+
+            // Сохраняем
+            const state = JSON.parse(localStorage.getItem('columnSort') || '{}');
+            state[sortKey] = { sortBy: next.sortBy, order: next.order };
+            localStorage.setItem('columnSort', JSON.stringify(state));
+
+            // Пересортируем
+            sortColumnTasks(columnDiv, next.sortBy, next.order);
+        });
+
+        headerDiv.appendChild(headerWithCounter);
+        headerDiv.appendChild(sortButton);
+        return headerDiv;
+    }
+
+    function getNextSortState(current) {
+        const cycle = [
+            { sortBy: 'default', order: 'asc' },
+            { sortBy: 'title', order: 'asc' },
+            { sortBy: 'title', order: 'desc' },
+            { sortBy: 'due_date', order: 'asc' },
+            { sortBy: 'due_date', order: 'desc' },
+            { sortBy: 'priority', order: 'asc' },
+            { sortBy: 'priority', order: 'desc' }
+        ];
+
+        const currentIndex = cycle.findIndex(s => s.sortBy === current.sortBy && s.order === current.order);
+        const nextIndex = (currentIndex + 1) % cycle.length;
+        return cycle[nextIndex];
+    }
+
+    function sortTasks(tasks, board_id, column_id) {
+        const sortKey = `${board_id}-${column_id}`;
+        const saved = JSON.parse(localStorage.getItem('columnSort') || '{}')[sortKey] || { sortBy: 'default', order: 'asc' };
+        const { sortBy, order } = saved;
+
+        if (sortBy === 'default') return tasks;
+
+        const isAsc = order === 'asc';
+        return [...tasks].sort((a, b) => {
+            let valA, valB;
+
+            if (sortBy === 'title') {
+                valA = a.title.toLowerCase();
+                valB = b.title.toLowerCase();
+            } else if (sortBy === 'due_date') {
+                valA = new Date(a.due_date);
+                valB = new Date(b.due_date);
+            } else if (sortBy === 'priority') {
+                valA = a.priority;
+                valB = b.priority;
+            } else {
+                return 0;
             }
 
-            initDragAndDrop();
-            
-            const columnAddColumn = document.createElement('div');
-            columnAddColumn.classList.add('column')
+            if (valA < valB) return isAsc ? -1 : 1;
+            if (valA > valB) return isAsc ? 1 : -1;
+            return 0;
+        });
+    }
 
-            const columnDiv = document.createElement('div');
-            columnDiv.classList.add('column-add-column'); //, 'cards'
-            columnDiv.style.width = '5vw';
-            columnDiv.dataset.columnId = 0;
-            columnDiv.dataset.columnTitle = 'column-add-column';
+    function sortColumnTasks(columnElement, sortBy, order) {
+        const cards = Array.from(columnElement.querySelectorAll('.card'));
+        if (sortBy === 'default') return;
 
-            const headerColumn = document.createElement('div');
-            headerColumn.classList.add('column-header');
-            const headerAddColumn = document.createElement('h3');
-            headerAddColumn.innerHTML = '+';
-            headerColumn.appendChild(headerAddColumn);
-            // const sortButton = document.createElement('button');
-            // sortButton.textContent = '⇅';
-            // sortButton.className = 'sort-btn';
-            // headerAddColumn.appendChild(sortButton);
-            
-            columnAddColumn.appendChild(headerColumn);
-            columnAddColumn.appendChild(columnDiv)
+        const isAsc = order === 'asc';
+        cards.sort((a, b) => {
+            let valA, valB;
 
-            columnList.appendChild(columnAddColumn)
+            if (sortBy === 'title') {
+                valA = a.querySelector('.card-title').textContent.toLowerCase();
+                valB = b.querySelector('.card-title').textContent.toLowerCase();
+            } else if (sortBy === 'due_date') {
+                const textA = a.querySelector('.card-due-date').textContent.replace('До: ', '');
+                const textB = b.querySelector('.card-due-date').textContent.replace('До: ', '');
+                valA = new Date(textA);
+                valB = new Date(textB);
+            } else if (sortBy === 'priority') {
+                valA = parseInt(a.dataset.priority) || 0;
+                valB = parseInt(b.dataset.priority) || 0;
+            } else {
+                return 0;
+            }
 
-        } catch (error) {
-            console.error('Error adding column:', error);
-        }
+            if (valA < valB) return isAsc ? -1 : 1;
+            if (valA > valB) return isAsc ? 1 : -1;
+            return 0;
+        });
+
+        cards.forEach(card => columnElement.appendChild(card));
+    }
+
+    function updateSortButtonUI(button) {
+        const sortBy = button.dataset.sortBy;
+        const order = button.dataset.order;
+        let symbol = '⇅';
+
+        if (sortBy === 'title') symbol = order === 'asc' ? 'A↑' : 'A↓';
+        else if (sortBy === 'due_date') symbol = order === 'asc' ? '📅↑' : '📅↓';
+        else if (sortBy === 'priority') symbol = order === 'asc' ? '❗↑' : '❗↓';
+
+        button.textContent = symbol;
+    }
+
+    function createAddColumn() {
+        const outer = document.createElement('div');
+        outer.classList.add('column');
+
+        const columnDiv = document.createElement('div');
+        columnDiv.classList.add('column-add-column');
+        columnDiv.style.width = '5vw';
+        columnDiv.dataset.columnId = 0;
+
+        const header = document.createElement('div');
+        header.classList.add('column-header');
+
+        const title = document.createElement('h3');
+        title.textContent = '+';
+        header.appendChild(title);
+
+        outer.appendChild(header);
+        outer.appendChild(columnDiv);
+        return outer;
     }
 
     // Функция создания карточки
@@ -321,6 +487,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         card.classList.add('card');
         card.draggable = true;
         card.dataset.id = id;
+        card.dataset.priority = priority;
         
         let borderColor;
 
@@ -657,6 +824,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // загрузка последней доски
     updateBoardTask(lastBoardId);
+    updateColumnCounters();
 });
 
 // Вспомогательная функция для определения позиции при перетаскивании
@@ -694,7 +862,6 @@ function getPriorityColor(priority) {
 // Управление сайдбаром expand/collapse + hover-режим
 const expandCollapseBtn = document.getElementById('expand-collapse');
 const projectIcon = document.getElementById('project-icon');
-const sidebar = document.getElementById('sidebar');
 const board = document.querySelector('.kanban-board');
 let isExpanded = true;
 

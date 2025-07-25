@@ -49,7 +49,7 @@
     <!-- Боковая панель -->
     <div class="sidebar-short">
         <div class="sidebar-upper">
-            <div class="icon" id="expand-collapse" title="Развернуть">
+            <div class="icon" id="expand-collapse" class="collapsed" title="Развернуть">
                 <img src="../static/sidebar.png" alt="">
             </div>
             <div class="icon activatable active" id="project-icon" title="Доски">
@@ -110,7 +110,7 @@
                 <textarea id="description" name="description"></textarea>
                 <br>
                 <label for="due-date">Контрольный срок:</label>
-                <input type="date" id="due-date" name="due-date" required>
+                <input type="date" id="due-date" name="due-date" min="1900-01-01" max="2100-12-31" required>
                 <br>
                 <div class="custom-select">
                     <button type="button" class="select-button" id="select-assignee">Исполнитель</button>
