@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Настройки — Kanban</title>
+    <link rel="stylesheet" href="/static/styles/style.css"/>
+    <link rel="stylesheet" href="/static/styles/settings.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h2>Kanban</h2>
+        <div class="header-content">
+            <!-- <button id="add-task-btn" class="add-task-btn">+ Создать</button> -->
+
+            <div class="custom-select">
+                <button type="button" class="select-button" id="select-create">+ Создать</button>
+                <div class="select-options">
+                    <div class="option">Задачу</div>
+                    <div class="option">Колонку</div>
+                    <div class="option">Доску</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Боковая панель -->
+    <div class="sidebar-short">
+        <div class="sidebar-upper">
+            <div class="icon" id="expand-collapse" class="collapsed" title="Развернуть">
+                <img src="../static/sidebar.png" alt="">
+            </div>
+            <div class="icon activatable" id="project-icon" title="Доски">
+                <img src="../static/project.png" alt="">
+            </div>
+            <div class="icon activatable active">
+                <img src="../static/bell.png" alt="">
+            </div>
+        </div>
+        <div class="sidebar-lower">
+            <div class="icon activatable settings" id="settings-btn" title="Настройки">
+                <img src="../static/settings.png" alt="">
+            </div>
+            <div class="icon account" title="Аккаунт">
+                <img src="../static/user.png" alt="" class="account-icon">
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Проекты</h3>
+            <button id="add-board-btn" class="add-project-btn">+</button>
+        </div>
+        <ul id="project-list" class="project-list">
+            <!-- Проекты будут добавляться сюда -->
+        </ul>
+    </div>
+
+    <div class="kanban-board">
+        <div class="settings-container">
+            <h1>Настройки приложения</h1>
+
+            <section>
+                <h2>Уведомления</h2>
+                <h3>Телеграм</h3>
+                <label class="checkbox-ios">
+                    <input type="checkbox">
+                    <span class="checkbox-ios-switch"></span>
+                </label>
+                
+                <h3>Почта</h3>
+                <label class="checkbox-ios">
+                    <input type="checkbox" checked>
+                    <span class="checkbox-ios-switch"></span>
+                </label>
+            </section>
+
+            <section>
+                <h2>Тема</h2>
+                <label>
+                    <input type="radio" name="theme" value="light" checked />
+                    Светлая
+                </label>
+                <label>
+                    <input type="radio" name="theme" value="dark" />
+                    Тёмная
+                </label>
+            </section>
+        </div>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

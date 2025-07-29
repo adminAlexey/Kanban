@@ -1,12 +1,17 @@
+document.getElementById('settings-btn').addEventListener('click', () => {
+    window.location.href = '/settings';
+});
+
+document.getElementById('notifications-btn').addEventListener('click', () => {
+    window.location.href = '/notifications';
+});
+
 localStorage.setItem('username', '22170424') // для удобства тестирования
 const savedUser = localStorage.getItem('username');
 var actualBoardId = localStorage.getItem('actualBoardId');
 var lastBoardId = localStorage.getItem('lastBoardId');
 
 const sidebar = document.getElementById('sidebar');
-// sidebar.style.transition = 'none';
-// sidebar.style.display = 'none';
-
 
 let isDragging = false;
 
@@ -83,18 +88,6 @@ async function updateTaskInDB(id, columnID, title, description, dueDate, assigne
 
 // Загрузка элемента DOM
 document.addEventListener('DOMContentLoaded', async function () {
-    function updateSortButtonUI(button) {
-        const sortBy = button.dataset.sortBy;
-        const order = button.dataset.order;
-        let symbol = '⇅';
-
-        if (sortBy === 'title') symbol = order === 'asc' ? 'A↑' : 'A↓';
-        else if (sortBy === 'due_date') symbol = order === 'asc' ? '📅↑' : '📅↓';
-        else if (sortBy === 'priority') symbol = order === 'asc' ? '❗↑' : '❗↓';
-
-        button.textContent = symbol;
-    }
-
     function updateColumnCounters() {
         document.querySelectorAll('.column').forEach(col => {
             const cardsContainer = col.querySelector('.cards');
@@ -265,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             // 4. Добавляем колонку "Добавить"
-            const addColumn = createAddColumn();
+            const addColumn = createButtonAddColumn();
             columnList.appendChild(addColumn);
 
             // 5. Инициализация
@@ -459,14 +452,42 @@ document.addEventListener('DOMContentLoaded', async function () {
         button.textContent = symbol;
     }
 
-    function createAddColumn() {
+    async function addColumn() {
+        try {
+            const response = await fetch('/api/column', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    board_id: actualBoardId,
+                    title: 'New Column'
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error adding column:', error);
+        }
+    }
+
+    function createButtonAddColumn() {
         const outer = document.createElement('div');
         outer.classList.add('column');
 
         const columnDiv = document.createElement('div');
         columnDiv.classList.add('column-add-column');
+        columnDiv.classList.add('column');
         columnDiv.style.width = '5vw';
         columnDiv.dataset.columnId = 0;
+
+        buttonAddColumn = document.createElement('div');
+        buttonAddColumn.className = 'add-column-btn';
+        buttonAddColumn.innerHTML = '+';
+
+        buttonAddColumn.addEventListener('click', addColumn)
+
+        columnDiv.appendChild(buttonAddColumn);
 
         const header = document.createElement('div');
         header.classList.add('column-header');
@@ -823,7 +844,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     // загрузка последней доски
-    updateBoardTask(lastBoardId);
+    updateBoardTask(actualBoardId);
     updateColumnCounters();
 });
 

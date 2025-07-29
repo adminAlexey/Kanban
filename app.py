@@ -32,6 +32,18 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/settings')
+def settings():
+    """Страница настроек"""
+    return render_template('settings.html')
+
+
+@app.route('/notifications')
+def notifications():
+    """Страница настроек"""
+    return render_template('notifications.html')
+
+
 @app.route('/api/login', methods=['POST'])
 def login():
     """Функция авторизации пользователя"""
@@ -144,6 +156,26 @@ def fill_boards(board_id):
         for column in models.Column.query.filter_by(board_id=board_id).all()
     ]
     return jsonify(board_info)
+
+
+@app.route('/api/column', methods=['POST'])
+def add_column():
+    """Функция добавления колонки"""
+    data = request.get_json()
+    board_id = data.get('board_id')
+    title = data.get('title')
+    board = models.Board.query.filter_by(id=board_id).first()
+    board_columns = board.columns
+    position = len(board_columns)
+
+    column = models.Column(board_id=board_id, title=title, position=position)
+    models.base.db.session.add(column)
+    models.db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'Колонка создана'
+    })
 
 
 @app.route('/api/task', methods=['POST'])
