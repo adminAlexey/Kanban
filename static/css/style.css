@@ -3,10 +3,10 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #fff;
     color: #333;
-    overflow: hidden; /* Отключаем прокрутку всей страницы */
-    height: 100vh; /* Фиксируем высоту */
+    overflow: hidden;
+    height: 100vh;
+    background-size: cover;
 }
 
 .header-with-counter h5 {
@@ -28,14 +28,24 @@ body {
     background-color: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .modal-content {
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 25px;
     border-radius: 8px;
     width: 350px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .modal h2 {
@@ -73,8 +83,8 @@ body {
 /* Шапка */
 .header {
     width: 100vw;
-    background-color: #2c3e50;
-    color: white;
+    background-color: rgba(206, 212, 218, 0.25);
+    color: black;
     padding: 15px 15px 15px 20vw;
     display: flex;
     justify-content: space-between;
@@ -85,6 +95,10 @@ body {
     right: 0;
     height: 6vh;
     box-sizing: border-box;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .header h2 {
@@ -102,7 +116,7 @@ body {
 /* Боковая панель */
 .sidebar-short {
     display: flex;
-    background-color: #ced4da;
+    /* background-color: rgba(206, 212, 218, 0.25); */
     width: 3vw;
     height: 100%;
     left: 0;
@@ -111,14 +125,24 @@ body {
     flex-direction: column;
     position: fixed;
     justify-content: space-between;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .icon {
     display: flex;
     height: 3vw;
-    background-color: #ced4da;
+    width: 3vw;
+    padding: 0;
+    margin: 0;
     align-items: center;
     justify-content: center;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .icon.active {
@@ -132,7 +156,7 @@ body {
 .sidebar {
     width: 15vw;
     height: 100vh;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.5);
     position: fixed;
     left: 3vw;
     top: 0;
@@ -142,10 +166,14 @@ body {
     overflow-y: auto;
     transition: transform 0.3s ease;
     z-index: 1;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .sidebar.collapsed {
-    transform: translateX(-100%);
+    transform: translateX(-150%);
 }
 
 .sidebar.expanded {
@@ -196,11 +224,18 @@ body {
     padding: 20px;
     height: 94vh;
     width: auto;
-    background-color: #fff;
-    overflow-x: auto;
+    /* background-color: #fff; */
+    /* overflow-x: hidden; */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE и старый Edge */
     overflow-y: hidden;
     box-sizing: border-box;
     transition: margin 0.3s ease;
+}
+
+
+.kanban-board::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
 }
 
 .kanban-board.expand {
@@ -258,7 +293,12 @@ body {
 }
 
 .add-column-btn:hover {
-    background-color: rgb(240, 240, 240);
+    background-color: rgba(240, 240, 240, 0.6);
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .delete-board-btn {
@@ -289,19 +329,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    aspect-ratio: 1 / 1;
-    /* padding: 4px; */
-    padding: 0;
-    font-size: 18px;
+    padding: 2px;
+    width: max-content;
+    height: max-content;
     background-color: #f5f7fa;
-    color: #3498db;
     border: 1px solid #3498db;
     border-radius: 6px;
-    font-weight: 500;
-    flex-shrink: 0;                  /* Важно: предотвращает сжатие в flex-контейнере */
-    box-sizing: border-box;          /* Учитывает padding и border в размерах */
-    line-height: 1;
 }
 
 .sort-btn:hover {
@@ -355,9 +388,11 @@ li.board-item {
 }
 
 .icon img {
-    width: 2vw;
-    height: 2vw;
+    width: 3vw;
+    height: 3vw;
     object-fit: cover;
+    /* затемнение в светлой теме */
+    filter: brightness(0) contrast(0.6);
 }
 
 /* Закрытие модального окна */
@@ -376,12 +411,18 @@ li.board-item {
 
 /* Карточки задач */
 .card {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: 6px;
     padding: 10px;
     margin-bottom: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     cursor: pointer;
+    transition: transform 0.2s ease-out;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 /* Обёртка для индикатора и заголовка */
@@ -409,13 +450,13 @@ li.board-item {
 }
 
 .card:hover {
+    transition: transform 0.2s ease;
     transform: translate(1px, -2px);
     box-shadow: -2px 4px 8px rgba(0, 0, 0, 0.2);
-    /* background-color: whitesmoke; */
 }
 
 .card-description {
-    color: #666;
+    color: #000000;
     font-size: 14px;
     margin-bottom: 10px;
 }
@@ -441,21 +482,27 @@ li.board-item {
 
 /* Колонки */
 .cards {
-    background-color: #fff;
     border-radius: 8px;
     padding: 10px;
-    padding-bottom: 13spx;
+    padding-bottom: 14px;
     width: calc(85vw / 4);
     height: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    transition: 
+        box-shadow 0.3s ease-out,
+        backdrop-filter 0.3s ease;
 }
 
 .cards:hover {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    background-color: rgb(240, 240, 240);
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .column {
@@ -466,21 +513,30 @@ li.board-item {
 /* Скрываем скроллбар по умолчанию */
 ::-webkit-scrollbar {
     width: 6px;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0);
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
-/* Кастомный скроллбар */
 ::-webkit-scrollbar-track {
-    background-color: #fff;
-    border-radius: 10px;
+    border-radius: 6px;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 /* Стили для "ползунка" */
 ::-webkit-scrollbar-thumb {
-    background-color: #fff;
-    border-radius: 10px;
+    border-radius: 6px;
     opacity: 0;
     transition: opacity 0.2s ease, background-color 0.2s ease;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 /* Показываем при наведении */
@@ -494,7 +550,6 @@ li.board-item {
     justify-content: space-between;
     align-items: center;
     margin: 0;
-    /* padding-bottom: 10px; */
     border-bottom: 2px solid #eee;
 }
 
@@ -508,10 +563,11 @@ li.board-item {
     padding: 10px;
     margin: 0;
     line-height: normal;
+    border-radius: 6px;
 }
 
 .column-header h3:hover {
-    background-color: #f8f9fa;
+    background-color: rgba(209, 209, 209, 0.25);
 }
 
 /* кастомный select */
@@ -549,13 +605,18 @@ li.board-item {
     right: 0;
     max-height: 200px;
     overflow-y: auto;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.25);
     border: 1px solid #ced4da;
     border-top: none;
     border-radius: 0.375rem;
     margin-top: 0.125rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 150;
+
+    /* Glassmorphism */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .option {
@@ -565,14 +626,12 @@ li.board-item {
 }
 
 .option:hover {
-    background-color: #f1f1f1;
+    background-color: rgba(241, 241, 241, 0.9);
 }
 
-
-/* === Боковая панель: короткая (всегда видима) === */
+/* Боковая панель: короткая*/
 .sidebar-short {
     display: flex;
-    background-color: #ced4da;
     width: 3vw;
     height: 100vh;
     left: 0;
@@ -581,18 +640,4 @@ li.board-item {
     flex-direction: column;
     position: fixed;
     justify-content: space-between;
-}
-
-.icon {
-    display: flex;
-    height: 3vw;
-    background-color: #ced4da;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon img {
-    width: 2vw;
-    height: 2vw;
-    object-fit: cover;
 }

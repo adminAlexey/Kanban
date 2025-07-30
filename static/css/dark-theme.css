@@ -1,0 +1,159 @@
+/* Фон страницы и текст */
+body {
+    color: #eee;
+    background-size: cover;
+}
+
+/* Шапка */
+.header {
+    background-color: rgba(50, 50, 50, 0.3);
+    color: #eee;
+}
+
+.header h2 {
+    color: #eee;
+}
+
+/* Боковая панель */
+.sidebar-short {
+    background-color: rgba(50, 50, 50, 0.3);
+}
+
+.sidebar {
+    background-color: rgba(40, 40, 40, 0.5);
+}
+
+.sidebar-header {
+    border-bottom: 2px solid #555;
+    background-color: rgba(40, 40, 40, 0);
+}
+
+.sidebar h3{
+    color: #eee;
+}
+
+.project-list li {
+    color: #eee;
+}
+
+.project-list li:hover {
+    background-color: rgba(100, 100, 100, 0.3);
+}
+
+/* Канбан-доска */
+.kanban-board {
+    color: #eee;
+}
+
+/* Карточки задач */
+.card {
+    background-color: rgba(40, 40, 40, 0.8);
+    color: #eee;
+}
+
+.card-description,
+.card-assignee,
+.card-due-date {
+    color: #ddd;
+}
+
+.overdue {
+    color: #e78a8a;
+}
+
+/* Инпуты и модальные окна */
+.modal-content {
+    background-color: rgba(50, 50, 50, 0.95);
+}
+
+.modal h2,
+.modal label {
+    color: #eee;
+}
+
+.modal input,
+.modal textarea {
+    background-color: rgba(30, 30, 30, 0.8);
+    color: #fff;
+    border-color: #555;
+}
+
+/* Кнопки */
+.add-task-btn,
+.submit-btn {
+    background-color: #1d6ca2;
+}
+
+.add-task-btn:hover,
+.submit-btn:hover {
+    background-color: #1a5a8c;
+}
+
+.add-project-btn,
+.sort-btn {
+    background-color: rgba(50, 50, 50, 0.3);
+    color: #8ec1ff;
+    border-color: #8ec1ff;
+}
+
+.add-project-btn:hover,
+.sort-btn:hover {
+    background-color: rgba(70, 70, 70, 0.4);
+}
+
+.delete-board-btn {
+    background-color: rgba(60, 10, 10, 0.5);
+    color: #e78a8a;
+    border-color: #e78a8a;
+}
+
+.delete-board-btn:hover {
+    background-color: rgba(80, 10, 10, 0.6);
+}
+
+/* Колонки */
+.cards:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(170, 170, 170);
+}
+
+.cards:hover {
+    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.4);
+}
+
+.column-header h3 {
+    color: #eee;
+}
+
+.column-header h3:hover {
+    color: #eee;
+    background-color: rgba(45, 47, 49, 0.25);
+}
+
+/* Кастомный select */
+.select-button {
+    background-color: rgba(50, 50, 50, 0.5);
+    color: #eee;
+    border-color: #555;
+}
+
+.select-options {
+    background-color: rgba(50, 50, 50, 0.8);
+    border-color: #555;
+}
+
+.option {
+    color: #eee;
+}
+
+.option:hover {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+
+/* Скроллбар — общий стиль для тёмной темы */
+::-webkit-scrollbar-thumb {
+    background-color: #848484;
+}
+
+.icon img {
+    filter: brightness(1) contrast(1);
+}

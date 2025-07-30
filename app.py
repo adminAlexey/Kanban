@@ -1,4 +1,4 @@
-""""""
+"""бэкенд"""
 
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template
@@ -40,7 +40,7 @@ def settings():
 
 @app.route('/notifications')
 def notifications():
-    """Страница настроек"""
+    """Страница уведомлений"""
     return render_template('notifications.html')
 
 

@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Board</title>
-    <link rel="icon" href="../static/account-icon.jpg" type="image/png">
-    <link rel="stylesheet" href="/static/styles/style.css">
+    <link rel="preload" as="image" href="/static/wallpapers/felix-mittermeier-WLGHjbC0Cq4-unsplash.jpg">
+    <link rel="preload" as="image" href="/static/wallpapers/laura-adai-BB0eIqCHibk-unsplash.jpg">
+    <link rel="icon" href="../static/icons/board.png" type="image/png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/dark-theme.css" id="dark-theme-link" disabled>
 </head>
 <body>
     <!-- Окно входа -->
@@ -50,26 +53,26 @@
     <div class="sidebar-short">
         <div class="sidebar-upper">
             <div class="icon" id="expand-collapse" class="collapsed" title="Развернуть">
-                <img src="../static/sidebar.png" alt="">
+                <img src="../static/icons/sidebar.png" alt="">
             </div>
-            <div class="icon activatable active" id="project-icon" title="Доски">
-                <img src="../static/project.png" alt="">
+            <div class="icon activatable active" id="project-btn" title="Доски">
+                <img src="../static/icons/board.png" alt="">
             </div>
             <div class="icon activatable" id="notifications-btn" title="Уведомления">
-                <img src="../static/bell.png" alt="">
+                <img src="../static/icons/bell.png" alt="">
             </div>
         </div>
         <div class="sidebar-lower">
             <div class="icon activatable settings" id="settings-btn" title="Настройки">
-                <img src="../static/settings.png" alt="">
+                <img src="../static/icons/settings.png" alt="">
             </div>
             <div class="icon account" title="Аккаунт">
-                <img src="../static/user.png" alt="" class="account-icon">
+                <img src="../static/icons/user.png" alt="" class="account-icon">
             </div>
         </div>
     </div>
 
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar collapsed" id="sidebar">
         <div class="sidebar-header">
             <h3>Проекты</h3>
             <button id="add-board-btn" class="add-project-btn">+</button>
@@ -80,7 +83,7 @@
     </div>
 
     <!-- Канбан-доска -->
-    <div class="kanban-board" id="board">
+    <div class="kanban-board expand" id="board">
         <ul id="column-list" class="column-list">
             <!-- Колонки будут добавляться сюда -->
         </ul>
@@ -157,6 +160,6 @@
         </div>
     </div>
 
-    <script src="static/script.js"></script>
+    <script type="module" src="static/js/main.js"></script>
 </body>
 </html>
