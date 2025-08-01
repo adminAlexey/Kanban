@@ -1,3 +1,5 @@
+import { initSidebar } from '../components/sidebar.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
 
@@ -28,4 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/settings';
         });
     }
+
+    initSidebar();
 });

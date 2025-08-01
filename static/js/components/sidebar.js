@@ -6,6 +6,7 @@ export function initSidebar() {
 
     function updateState() {
         sidebar.classList.toggle('collapsed', !isExpanded);
+        sidebar.classList.toggle('expanded', isExpanded)
         board.classList.toggle('expand', !isExpanded);
         expandBtn.title = isExpanded ? 'Свернуть' : 'Развернуть';
     }

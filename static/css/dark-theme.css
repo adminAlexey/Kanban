@@ -157,3 +157,21 @@ body {
 .icon img {
     filter: brightness(1) contrast(1);
 }
+
+/* Контейнер поиска */
+/* Поле ввода (тёмная тема) */
+.search-input {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(30, 30, 30, 0.4); /* тёмный прозрачный фон */
+    color: #eee; /* светлый текст */
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.search-input:focus {
+    border-color: #5dade2; /* мягкий голубой вместо яркого */
+    box-shadow: 0 0 0 2px rgba(93, 173, 226, 0.25);
+    background-color: rgba(30, 30, 30, 0.6);
+}

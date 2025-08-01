@@ -30,9 +30,16 @@
     <!-- Header -->
     <header class="header">
         <h2>Kanban</h2>
-        <div class="header-content">
-            <!-- <button id="add-task-btn" class="add-task-btn">+ Создать</button> -->
 
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Поиск задач...">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        </div>
+
+        <div class="header-content">
             <div class="custom-select">
                 <button type="button" class="select-button" id="select-create">+ Создать</button>
                 <div class="select-options">
@@ -41,11 +48,6 @@
                     <div class="option">Доску</div>
                 </div>
             </div>
-
-            <!-- <div class="user-info">
-                <span id="username-display" class="username"></span>
-                <img src="../static/account-icon.png" alt="" class="account-icon">
-            </div> -->
         </div>
     </header>
 

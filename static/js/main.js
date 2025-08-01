@@ -1,6 +1,5 @@
 import { initSidebar } from './components/sidebar.js';
-import { initModals } from './components/modal.js';
-import { initPriorityButtons } from './components/priority.js';
+import { initModals, initPriorityButtons } from './components/modal.js';
 import { initBoard } from './pages/board.js';
 
 const body = document.body;

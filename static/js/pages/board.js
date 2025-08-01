@@ -1,13 +1,12 @@
 import { apiGet, apiPost, apiDelete } from '../utils/api.js';
 import { UserStorage, BoardStorage, ColumnSortStorage } from '../utils/storage.js';
 import { initDragAndDrop } from '../components/drag-drop.js';
-import { initPriorityButtons } from '../components/priority.js';
+import { initPriorityButtons } from '../components/modal.js';
 import { initCustomSelect, loadUsersForTaskForm } from '../components/custom-select.js';
 
 let actualBoardId = BoardStorage.getActual();
 let lastBoardId = BoardStorage.getLast();
 
-const selectCreateButton = document.getElementById('select-create');
 const modalEditTask = document.getElementById('modal-edit-task');
 const modalNewTask = document.getElementById('modal-new-task');
 const modalNewColumn = document.getElementById('modal-new-column');
@@ -29,6 +28,35 @@ export async function initBoard() {
 
     if (actualBoardId) {
         await updateBoardTask(actualBoardId);
+    }
+
+    // Логика поиска
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+            if (!query) {
+                // Если запрос пустой — показываем все карточки
+                document.querySelectorAll('.card').forEach(card => {
+                    card.style.display = '';
+                });
+                return;
+            }
+
+            document.querySelectorAll('.card').forEach(card => {
+                const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
+                const assignee = card.querySelector('.card-assignee')?.textContent.toLowerCase() || '';
+                const dueDate = card.querySelector('.card-due-date')?.textContent.toLowerCase() || '';
+
+                const matches = title.includes(query) ||
+                            description.includes(query) ||
+                            assignee.includes(query) ||
+                            dueDate.includes(query);
+
+                card.style.display = matches ? '' : 'none';
+            });
+        });
     }
 }
 
