@@ -1,15 +1,22 @@
 """бэкенд"""
 
+import os
+import threading
+from dotenv import load_dotenv
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template
 from sqlalchemy.exc import SQLAlchemyError
 
 from deploy.config import config_by_name
 import models
+from telebot import send_message
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(config_by_name["dev"])
 app.secret_key = app.config.get("SECRET_KEY", "fallback-secret-key")
+app.config["TELEGRAM_BOT_TOKEN"] = os.getenv("TELEGRAM_BOT_TOKEN")
 
 models.base.db.init_app(app)
 
@@ -232,6 +239,16 @@ def add_task():
         },
     )
 
+    text = f"""
+Новая задача прилетела:
+{task.title}
+
+{task.description}
+
+{task.due_date}
+    """
+    send_message(assignee_user.telegram_id, text)
+
     try:
         models.base.db.session.commit()
         return jsonify(
@@ -353,7 +370,7 @@ def update_task(task_id):
         return jsonify({"error": "Task not found"}), 404
 
     # Сохраняем старые значения для логирования
-    old_column = models.Column.query.get(task.column_id)
+    old_column = models.base.db.session.get(models.Column, task.column_id)
     old_assignee = task.assignee.login if task.assignee else None
 
     # Обновляем поля
@@ -388,7 +405,7 @@ def update_task(task_id):
     if data.get("priority") is not None:
         changes["priority"] = data["priority"]
     if data.get("column_id") is not None and old_column.id != data["column_id"]:
-        new_column = models.Column.query.get(data["column_id"])
+        new_column = models.base.db.session.get(models.Column, data["column_id"])
         changes["moved"] = {
             "from": old_column.title,
             "to": new_column.title if new_column else "unknown",
@@ -401,6 +418,12 @@ def update_task(task_id):
         target_id=task.id,
         details=changes,
     )
+
+    text = f"""
+Изменения в задаче:
+{changes}
+    """
+    send_message(task.owner.telegram_id, text)
 
     try:
         models.base.db.session.commit()
@@ -419,7 +442,52 @@ def get_users(board_id):
     return jsonify({"board_id": board_id, "users": users_data})
 
 
+@app.route("/api/bind-telegram", methods=["POST"])
+def bind_telegram():
+    """Привязывает telegram_id к пользователю по логину"""
+    data = request.get_json()
+    user_data = data.get("user")
+    args = data.get("args")
+
+    if args:
+        login = args[0]
+        user = models.User.query.filter_by(login=login).first()
+
+        if user.telegram_id != str(user_data["id"]):
+            user.telegram_id = user_data["id"]
+            send_message(user_data['id'], f"Привязан новый аккаунт телеграм по логину <code>{login}</code>")
+        else:
+            user.telegram_id = user_data["id"]
+            text = f"""
+Ты успешно привязал аккаунт:\n
+<code>{login}</code>\n\n
+Теперь ты будешь получать уведомления из Kanban."""
+            send_message(user_data['id'], text)
+    else:
+        telegram_id = user_data["id"]
+        print('check', models.User.query.filter_by(telegram_id=telegram_id).first())
+        if models.User.query.filter_by(telegram_id=str(telegram_id)).first() is not None and models.User.query.filter_by(telegram_id=telegram_id).first().telegram_id == str(user_data['id']):
+            send_message(user_data['id'], 'Телеграм уже привязан к логину доски')
+        else:
+            text = """
+Чтобы привязать аккаунт, используй ссылку из приложения:\n
+<code>https://t.me/kanban_notice_flask_bot?start=твой_логин</code>
+        
+или воспользуйся ссылкой привязки http://127.0.0.1:5000/notifications
+            """
+            send_message(telegram_id, text)
+    models.base.db.session.commit()
+    return jsonify({"success": True, "message": "Telegram успешно привязан"})
+
+
 if __name__ == "__main__":
-    with app.app_context():
-        models.base.db.create_all()
-    app.run(debug=app.config.get("DEBUG", False))
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        with app.app_context():
+            models.base.db.create_all()
+            
+            # Запуск Telegram-бота
+            from telebot import run_bot
+            thread = threading.Thread(target=run_bot, daemon=True)
+            thread.start()
+
+    app.run(debug=app.config.get("DEBUG", True))

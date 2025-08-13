@@ -40,31 +40,21 @@
         </div>
     </div>
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3>Проекты</h3>
-            <button id="add-board-btn" class="add-project-btn">+</button>
-        </div>
-        <ul id="project-list" class="project-list">
-            <!-- Проекты будут добавляться сюда -->
-        </ul>
-    </div>
-
     <div class="kanban-board">
         <div class="settings-container">
-            <h1>Настройки приложения</h1>
+            <h1>Уведомления</h1>
 
             <section>
-                <h2>Уведомления</h2>
                 <h3>Телеграм</h3>
                 <label class="checkbox-ios">
-                    <input type="checkbox">
+                    <input type="checkbox" id="telegram-enabled">
                     <span class="checkbox-ios-switch"></span>
                 </label>
+                <p>Привяжите аккаунт Telegram по <a id="telegram-link" href="#" target="_blank">ссылке</a></p>
                 
                 <h3>Почта</h3>
                 <label class="checkbox-ios">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="email-enabled" checked>
                     <span class="checkbox-ios-switch"></span>
                 </label>
             </section>

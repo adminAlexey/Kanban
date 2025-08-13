@@ -236,6 +236,15 @@ function createColumn(column, board_id) {
     return outerColumn;
 }
 
+async function updateColumnTitleInDB(columnId, newTitle) {
+    try {
+        await apiPut(`/api/column/${columnId}`, { title: newTitle });
+    } catch (error) {
+        console.error('Ошибка при обновлении названия колонки:', error);
+        throw error;
+    }
+}
+
 function createColumnHeader(column, columnDiv, board_id) {
     const headerDiv = document.createElement('div');
     headerDiv.classList.add('column-header');
@@ -246,6 +255,38 @@ function createColumnHeader(column, columnDiv, board_id) {
     const titleElement = document.createElement('h3');
     titleElement.textContent = column.title;
     titleElement.contentEditable = true;
+
+    // Сохраняем оригинальное значение при фокусе
+    let originalText = column.title;
+    titleElement.addEventListener('focusin', () => {
+        originalText = titleElement.textContent;
+    });
+
+    // При потере фокуса проверяем, изменилось ли значение
+    titleElement.addEventListener('focusout', async () => {
+        const newText = titleElement.textContent.trim();
+        if (!newText) {
+            // Если пусто — возвращаем старое
+            titleElement.textContent = originalText;
+            return;
+        }
+        if (newText !== originalText) {
+            try {
+                await updateColumnTitleInDB(column.id, newText);
+            } catch (error) {
+                titleElement.textContent = originalText;
+                console.error('Не удалось переименовать колонку')
+            }
+        }
+    });
+
+    // Дополнительно: обработка Enter как подтверждение
+    titleElement.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            titleElement.blur(); // Завершаем редактирование
+        }
+    });
 
     const counter = document.createElement('h5');
     counter.textContent = column.tasks.length;
@@ -451,6 +492,11 @@ async function createCard(id, title, description, dueDate, assignee, priority, c
     const assigneeElement = document.createElement('div');
     assigneeElement.className = 'card-assignee';
     assigneeElement.textContent = `Исполнитель: ${assignee}`;
+
+//     assigneeElement.textContent = `
+// Заказчик:      Исполнитель:
+// ${22170424}   ->   ${assignee}
+//     `;
 
     card.appendChild(cardHeader);
     card.appendChild(descriptionElement);

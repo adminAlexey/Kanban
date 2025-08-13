@@ -1,7 +1,11 @@
-import { initSidebar } from '../components/sidebar.js';
+localStorage.setItem('login', '22170424');
+const login = localStorage.getItem('login');
 
 document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
+
+    const telegramLink = document.getElementById("telegram-link");
+    telegramLink.href = `https://t.me/kanban_notice_flask_bot?start=${login}`;
 
     // Тема
     const kanbanBtn = document.getElementById('project-btn');
@@ -19,6 +23,25 @@ document.addEventListener('DOMContentLoaded', () => {
         body.style.backgroundImage = 'url("/static/wallpapers/laura-adai-BB0eIqCHibk-unsplash.jpg")';
     }
 
+    const telegramCheckbox = document.getElementById('telegram-enabled');
+    const emailCheckbox = document.getElementById('email-enabled');
+
+    // loadNotificationSettings(username);
+
+    // telegramCheckbox.addEventListener('change', () => {
+    //     saveNotificationSettings(username, {
+    //         telegram: telegramCheckbox.checked,
+    //         email: emailCheckbox.checked
+    //     });
+    // });
+
+    // emailCheckbox.addEventListener('change', () => {
+    //     saveNotificationSettings(username, {
+    //         telegram: telegramCheckbox.checked,
+    //         email: emailCheckbox.checked
+    //     });
+    // });
+
     if (kanbanBtn) {
         kanbanBtn.addEventListener('click', () => {
             window.location.href = '/';
@@ -30,6 +53,4 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/settings';
         });
     }
-
-    initSidebar();
 });

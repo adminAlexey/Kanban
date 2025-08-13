@@ -464,6 +464,8 @@ li.board-item {
 }
 
 .card-assignee {
+    /* white-space: pre;
+    font-family: 'Courier New', monospace; */
     font-size: 12px;
     display: flex;
     align-items: center;

@@ -21,7 +21,7 @@ venv\Scripts\activate.bat
 ## Установите зависимости:
 
 ```bash
-pip install -r requirements.txt
+pip install -r deploy/requirements.txt
 ```
 
 ## Запустите приложение

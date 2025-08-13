@@ -11,6 +11,7 @@ class DevelopmentConfig(Config):
     """Конфигурация для разработки"""
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///kanban.db")
+    TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 
 class ProductionConfig(Config):
     """Конфигурация для продакшена"""
